@@ -42,6 +42,25 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage = 'landing' }) => {
 
   const isDashboard = location.pathname.includes('dashboard');
 
+  const scrollToSection = (sectionId: string) => {
+    setIsMobileMenuOpen(false);
+    if (location.pathname !== '/') {
+      navigate('/');
+      // Wait for navigation to complete then scroll
+      setTimeout(() => {
+        const element = document.getElementById(sectionId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    } else {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
+
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-700 ease-out border-b ${
@@ -64,9 +83,9 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage = 'landing' }) => {
         <div className="hidden md:flex items-center gap-8">
           {!isDashboard && (
             <>
-              <a href="/#features" className="text-sm font-medium text-slate-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-white transition-colors duration-500">Platform</a>
-              <a href="/#solutions" className="text-sm font-medium text-slate-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-white transition-colors duration-500">Solutions</a>
-              <a href="/#pricing" className="text-sm font-medium text-slate-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-white transition-colors duration-500">Pricing</a>
+              <button onClick={() => scrollToSection('features')} className="text-sm font-medium text-slate-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-white transition-colors duration-500 bg-transparent border-none cursor-pointer">Platform</button>
+              <button onClick={() => scrollToSection('solutions')} className="text-sm font-medium text-slate-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-white transition-colors duration-500 bg-transparent border-none cursor-pointer">Solutions</button>
+              <button onClick={() => scrollToSection('pricing')} className="text-sm font-medium text-slate-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-white transition-colors duration-500 bg-transparent border-none cursor-pointer">Pricing</button>
             </>
           )}
           
@@ -131,9 +150,9 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage = 'landing' }) => {
              <div className="flex flex-col gap-8">
                  {!isDashboard && (
                    <>
-                     <a href="/#features" onClick={() => setIsMobileMenuOpen(false)} className="text-2xl font-medium text-slate-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Platform</a>
-                     <a href="/#solutions" onClick={() => setIsMobileMenuOpen(false)} className="text-2xl font-medium text-slate-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Solutions</a>
-                     <a href="/#pricing" onClick={() => setIsMobileMenuOpen(false)} className="text-2xl font-medium text-slate-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Pricing</a>
+                     <button onClick={() => scrollToSection('features')} className="text-2xl font-medium text-slate-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors text-left bg-transparent border-none">Platform</button>
+                     <button onClick={() => scrollToSection('solutions')} className="text-2xl font-medium text-slate-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors text-left bg-transparent border-none">Solutions</button>
+                     <button onClick={() => scrollToSection('pricing')} className="text-2xl font-medium text-slate-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors text-left bg-transparent border-none">Pricing</button>
                    </>
                  )}
                  

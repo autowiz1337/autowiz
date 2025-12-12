@@ -7,6 +7,7 @@ import {
   AlertTriangle, RefreshCw, Home
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { useSearchParams } from 'react-router-dom';
 import { BackendReport, DashboardData } from '../types/Report';
 import { mapBackendReportToDashboard } from '../utils/reportMapper';
 import SEO from './SEO';
@@ -42,6 +43,9 @@ const Dashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Router Params
+  const [searchParams] = useSearchParams();
+
   // Editable State with Persistance Key
   const [editableDescription, setEditableDescription] = useState("");
   const [editableTitle, setEditableTitle] = useState("");
@@ -52,8 +56,7 @@ const Dashboard: React.FC = () => {
         setIsLoading(true);
         setError(null);
 
-        const params = new URLSearchParams(window.location.search);
-        const reportId = params.get('id');
+        const reportId = searchParams.get('id');
 
         if (!reportId) {
              setTimeout(() => {
@@ -116,7 +119,7 @@ const Dashboard: React.FC = () => {
     };
 
     fetchReport();
-  }, []);
+  }, [searchParams]);
 
   // Notification Stream Logic
   useEffect(() => {
