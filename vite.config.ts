@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: './', // Ensures assets load correctly on GitHub Pages or nested paths
+  base: '/', // Changed from './' to '/' for correct client-side routing on Cloudflare
   build: {
     outDir: 'dist',
     assetsDir: 'assets',

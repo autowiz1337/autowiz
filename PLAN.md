@@ -6,6 +6,7 @@
 - [x] **Checkout Integration**: Stripe Elements + Webhook triggers.
 - [x] **Visual Overhaul**: "Amazon Orange" buttons + Dark Mode strategy.
 - [x] **File Structure Fix**: Standardized `src/` directory for Types and Utils.
+- [x] **Netlify Build Repair**: Fixed `.nvmrc` encoding and Node versioning.
 
 ---
 
@@ -103,6 +104,38 @@
 ### 9.2 Fix .nvmrc Encoding
 - [x] **Diagnosis:** Netlify build log indicates an invalid character ('') in `.nvmrc`. This is likely a BOM (Byte Order Mark) or encoding issue introduced during file creation.
 - [x] **Action:** Re-write `.nvmrc` with a clean, simple "20" and a newline.
+
+---
+
+## 9. ☁️ Free Deployment Options
+**Goal:** List viable free hosting providers for this React/Vite SPA.
+
+### 9.1 Netlify (Recommended / Current)
+*   **Tier:** Free Starter (100GB Bandwidth, 300 Build Minutes).
+*   **Pros:** Deep Git integration, automatic HTTPS, easiest configuration for SPAs via `_redirects`.
+*   **Setup:** Connect Git Repo -> Build Command: `npm run build` -> Publish Directory: `dist`.
+*   **SPA Config:** Ensure `public/_redirects` exists with `/* /index.html 200`.
+
+### 9.2 Vercel
+*   **Tier:** Hobby (Free for personal/non-commercial).
+*   **Pros:** Extremely fast (Edge Network), zero-config for Vite/React, great analytics.
+*   **Setup:** Import Git Repo -> Framework Preset: `Vite`.
+*   **SPA Config:** Usually automatic, but can require `vercel.json` with rewrites if routing issues occur.
+
+### 9.3 Cloudflare Pages
+*   **Tier:** Free (Unlimited bandwidth, unlimited sites).
+*   **Pros:** Runs on Cloudflare's massive global edge network. Fastest TTFB (Time to First Byte).
+*   **Setup:** Connect Git Repo -> Framework Preset: `Vite`.
+*   **SPA Config:** Add `_redirects` file (same syntax as Netlify) to the `public` folder.
+
+### 9.4 GitHub Pages
+*   **Tier:** Free (Public repositories).
+*   **Pros:** Completely free, hosted directly from your repository code.
+*   **Cons:** No server-side routing support (requires workarounds).
+*   **Setup:**
+    1.  **Router:** Must switch React Router to `HashRouter` (URLs look like `/#/dashboard`).
+    2.  **Vite Config:** Must set `base: '/repo-name/'` in `vite.config.ts`.
+    3.  **Deploy:** Push the `dist` folder to a `gh-pages` branch.
 
 ---
 
