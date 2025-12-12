@@ -67,7 +67,7 @@ const Stats: React.FC<StatsProps> = ({ onNavigate }) => {
         <div className="flex flex-col items-center mb-32">
             <button 
                 onClick={() => onNavigate?.('checkout')}
-                className="group relative w-full sm:w-auto rounded-full px-12 py-5 text-xl font-bold text-white shadow-lg shadow-indigo-500/30 overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-indigo-500/50 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 flex items-center justify-center gap-2"
+                className="btn-primary group relative w-full sm:w-auto rounded-full px-12 py-5 text-xl font-bold shadow-lg shadow-indigo-500/30 overflow-hidden transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2"
             >
                 Get Started Now
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />

@@ -82,7 +82,7 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentPage = 'landing' }) 
                  {/* Optimize New Listing CTA */}
                  <button
                     onClick={() => window.open('?page=checkout', '_blank')}
-                    className="relative rounded-full px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-indigo-500/30 overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-indigo-500/50 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 flex items-center gap-2"
+                    className="btn-primary relative rounded-full px-5 py-2.5 text-sm font-bold shadow-lg shadow-indigo-500/30 overflow-hidden transition-all duration-300 hover:scale-105 flex items-center gap-2"
                  >
                     <Sparkles className="w-4 h-4" />
                     Optimize New Listing
@@ -98,7 +98,7 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentPage = 'landing' }) 
                 </button>
                 <button 
                     onClick={() => onNavigate?.('checkout')}
-                    className="relative rounded-full px-6 py-3 text-base font-medium text-white shadow-lg shadow-indigo-500/30 overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-indigo-500/50 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500"
+                    className="btn-primary relative rounded-full px-6 py-3 text-base font-medium shadow-lg shadow-indigo-500/30 overflow-hidden transition-all duration-300 hover:scale-105"
                 >
                   Get Started
                 </button>
@@ -140,7 +140,7 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentPage = 'landing' }) 
                         setIsMobileMenuOpen(false);
                         onNavigate?.(isDashboard ? 'landing' : 'checkout');
                     }}
-                    className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl font-bold text-lg text-white shadow-lg shadow-indigo-500/30 mt-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-indigo-500/50"
+                    className="btn-primary w-full py-4 rounded-xl font-bold text-lg shadow-lg shadow-indigo-500/30 mt-4 transition-all duration-300 hover:scale-[1.02]"
                  >
                     {isDashboard ? 'Optimize New Listing' : 'Get Started'}
                  </button>

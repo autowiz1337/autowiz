@@ -21,7 +21,7 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
 
         <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-[1.1] text-slate-900 dark:text-white">
           The only AI that drives <br className="hidden md:block" />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500">inventory turnover</span>
+          <span className="text-gradient-primary">inventory turnover</span>
         </h1>
 
         <p className="text-lg md:text-xl text-slate-600 dark:text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
@@ -32,7 +32,7 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
               <button 
                 onClick={() => onNavigate?.('checkout')}
-                className="group relative w-full sm:w-auto rounded-full px-10 py-5 text-xl font-bold text-white shadow-lg shadow-indigo-500/30 overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-indigo-500/50 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 flex items-center justify-center gap-2 backdrop-blur-3xl"
+                className="btn-primary group relative w-full sm:w-auto rounded-full px-10 py-5 text-xl font-bold overflow-hidden transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2 backdrop-blur-3xl shadow-lg shadow-indigo-500/30"
               >
                 Paste Your URL
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
