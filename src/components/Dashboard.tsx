@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, Target, ImageIcon, FileText, Save, Loader2, Check, ExternalLink, 
@@ -7,6 +6,7 @@ import {
   AlertTriangle, RefreshCw, Home
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { useSearchParams } from 'react-router-dom';
 import { BackendReport, DashboardData } from '../types/Report';
 import { mapBackendReportToDashboard } from '../utils/reportMapper';
 import SEO from './SEO';
@@ -37,6 +37,9 @@ const Dashboard: React.FC = () => {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [activeNotification, setActiveNotification] = useState<typeof NOTIFICATIONS[0] | null>(null);
   
+  // Router Params
+  const [searchParams] = useSearchParams();
+  
   // Data State
   const [reportData, setReportData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -52,10 +55,10 @@ const Dashboard: React.FC = () => {
         setIsLoading(true);
         setError(null);
 
-        const params = new URLSearchParams(window.location.search);
-        const reportId = params.get('id');
+        const reportId = searchParams.get('id');
 
         if (!reportId) {
+             // Simulate loading mock data for demo experience
              setTimeout(() => {
                  const mockRaw: BackendReport = {
                     "Id": 2,
@@ -116,7 +119,7 @@ const Dashboard: React.FC = () => {
     };
 
     fetchReport();
-  }, []);
+  }, [searchParams]);
 
   // Notification Stream Logic
   useEffect(() => {

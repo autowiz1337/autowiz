@@ -22,7 +22,7 @@ The landing page serves as the primary conversion funnel. It includes several hi
 ---
 
 ## 2. Dashboard Interface
-Accessed via the "Log in" button or automatically via a magic link (e.g., `?id=record_123`).
+Accessed via the "Log in" button or automatically via a magic link (e.g., `/dashboard?id=record_123`).
 
 ### Navigation
 The sidebar provides access to four main views:
@@ -36,7 +36,7 @@ The sidebar provides access to four main views:
 *   **Visual IQ**: Analysis of photo quality (lighting, composition).
 *   **Optimization**:
     *   **Narrative Editor**: A distraction-free text area to edit the AI-generated description. Includes a "Click to Edit" hint and easy-copy functionality.
-    *   **Save Draft**: Persists changes (currently mocked).
+    *   **Save Draft**: Persists changes to LocalStorage.
     *   **Distribution**: One-click links to post the listing to major portals (Autovit, OLX, etc.).
 *   **Resilience & Performance**:
     *   **Error Boundary**: Displays a branded "Access Error" screen with "Retry Connection" options if the R2 data fetch fails or the ID is invalid.
@@ -48,7 +48,7 @@ The sidebar provides access to four main views:
 The application supports three distinct checkout experiences based on user segment.
 
 ### A. Free Pilot (`Checkout.tsx`)
-*   **Route**: `?page=checkout` (if configured)
+*   **Route**: `/pilot` (or legacy `?page=checkout`)
 *   **Purpose**: Low-friction entry for free trials.
 *   **Features**:
     *   Simple form (Name, Email, URL).
@@ -56,7 +56,7 @@ The application supports three distinct checkout experiences based on user segme
     *   Urgency timers (5-minute reservation).
 
 ### B. Paid Stripe Flow (`PaidCheckout.tsx`)
-*   **Route**: Default "Get Started" or `?page=checkout` (if configured).
+*   **Route**: `/checkout` (Default "Get Started")
 *   **Purpose**: Main revenue driver.
 *   **Features**:
     *   **Step 1**: Lead capture (Name, Email, URL). Includes real-time URL validation for `autovit.ro`.
@@ -65,7 +65,7 @@ The application supports three distinct checkout experiences based on user segme
     *   **Offer Stack**: Visual breakdown of value ($7,300 value for $499).
 
 ### C. Invite-Only Flow (`InviteCheckout.tsx`)
-*   **Route**: `?page=invite`
+*   **Route**: `/invite`
 *   **Purpose**: VIP/Beta access for pre-selected users.
 *   **Features**:
     *   **Streamlined**: Single-step process (no payment).
@@ -78,23 +78,18 @@ The application supports three distinct checkout experiences based on user segme
 ## 4. Technical Architecture
 ### Dynamic Metadata
 The application now manages browser tab titles dynamically based on the active route to improve SEO and user context:
-*   **Landing**: "Velocity AI | Automotive Intelligence"
-*   **Dashboard**: "Dashboard | Velocity AI"
+*   **Landing**: "Velocity AI | Automate Your Dealership"
+*   **Dashboard**: "Report: [Title] | Velocity AI"
 *   **Checkout**: "Secure Checkout | Velocity AI"
 *   **Invite**: "VIP Access | Velocity AI"
 
 ### Data Hydration
 *   **Source**: The dashboard hydrates client-side by fetching JSON from a public Cloudflare R2 bucket.
-*   **Mechanism**: It reads the `?id=` query parameter to construct the fetch URL.
+*   **Mechanism**: It reads the `?id=` query parameter using `useSearchParams` to construct the fetch URL.
 *   **Security**: URLs are treated as "Capability URLs" (possession of the link grants read access).
 
 ---
 
 ## 5. Configuration
-To change the default checkout destination for the main "Get Started" buttons:
-1.  Open `App.tsx`.
-2.  Modify the `CHECKOUT_DESTINATION` constant.
-    *   `'checkout'`: Directs to the Free Pilot flow.
-    *   `'paid-checkout'`: Directs to the Stripe Payment flow.
-
-To test the Invite flow, append `?page=invite` to your browser URL (e.g., `http://localhost:5173/?page=invite`).
+To test the Invite flow, navigate to `/invite` in your browser.
+Legacy links (e.g., `?page=invite`) are automatically redirected to the new routes via the `LegacyRedirectHandler` in `App.tsx`.

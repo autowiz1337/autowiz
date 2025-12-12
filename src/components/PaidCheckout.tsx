@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { CheckCircle2, Lock, ArrowRight, ShieldCheck, Clock, Loader2, CreditCard, AlertCircle, Star, Quote, UserCheck, Users, MessageSquare, Mic, Check, Eye, Zap, MapPin, Globe, Database, Image, Camera, Film } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { useNavigate } from 'react-router-dom';
 
 // Initialize Stripe (Replace with your Publishable Key)
 const stripePromise = loadStripe('pk_test_TYooMQauvdEDq54NiTphI7jx');
@@ -385,6 +386,7 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
     voiceGender: 'female'
   });
   const [timeLeft, setTimeLeft] = useState(1800);
+  const navigate = useNavigate();
   
   const [scanState, setScanState] = useState<'idle' | 'scanning' | 'complete'>('idle');
   const [detectedMake, setDetectedMake] = useState<string | null>(null);
@@ -505,7 +507,7 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
 
   const handlePaymentSuccess = () => {
      alert("Payment Successful! Redirecting to dashboard...");
-     onBack(); 
+     navigate('/dashboard'); 
   };
 
   return (
