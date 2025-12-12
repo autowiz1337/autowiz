@@ -22,8 +22,8 @@
 *   **Benefit:** Better browser history support and shareable links.
 
 ### 2.2 Netlify SPA Configuration
-*   **Requirement:** Single Page Apps (SPA) on Netlify require a rewrite rule to handle refreshing pages other than `index.html`.
-*   **Action:** Create `public/_redirects` file.
+- [x] **Requirement:** Single Page Apps (SPA) on Netlify require a rewrite rule to handle refreshing pages other than `index.html`.
+- [x] **Action:** Create `public/_redirects` file.
     ```text
     /* /index.html 200
     ```
@@ -95,15 +95,17 @@
 **Goal:** Fix build failure `exit code: 2` caused by Netlify defaulting to Node v22.
 
 ### 9.1 Enforce Node LTS
-*   **Diagnosis:** Netlify uses Node v22 by default. Current build chain (Vite/Rollup) may have instability with bleeding-edge Node versions.
-*   **Solution:** Lock environment to Node v20 (LTS).
-*   **Action 1:** Create `.nvmrc` file containing `20`.
-*   **Action 2:** Update `package.json` with `engines` field: `"node": ">=18"`.
+- [x] **Diagnosis:** Netlify uses Node v22 by default. Current build chain (Vite/Rollup) may have instability with bleeding-edge Node versions.
+- [x] **Solution:** Lock environment to Node v20 (LTS).
+- [x] **Action 1:** Create `.nvmrc` file containing `20`.
+- [x] **Action 2:** Update `package.json` with `engines` field: `"node": "20.x"`.
+
+### 9.2 Fix .nvmrc Encoding
+- [x] **Diagnosis:** Netlify build log indicates an invalid character ('') in `.nvmrc`. This is likely a BOM (Byte Order Mark) or encoding issue introduced during file creation.
+- [x] **Action:** Re-write `.nvmrc` with a clean, simple "20" and a newline.
 
 ---
 
 ## 8. Execution Order for Next Coding Session
-1.  **Add .nvmrc**: Fix Netlify build.
-2.  **Install Router**: `npm install react-router-dom`
-3.  **Refactor App.tsx**: Implement Routes.
-4.  **Add Redirects**: Create `public/_redirects`.
+1.  **Done**: Fixed Netlify Deployment (.nvmrc + package.json + _redirects).
+2.  **Next**: Refactor App.tsx for better routing if needed.
