@@ -46,6 +46,7 @@ export default {
         'gradient-x': 'gradient-x 3s ease infinite',
         'pop': 'pop 1s cubic-bezier(0.16, 1, 0.3, 1) forwards',
         'chat-appear': 'chat-appear 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
+        // Common utility animations used in components
         'fade-in': 'fade-in 0.5s ease-out forwards',
         'fade-in-up': 'fade-in-up 0.5s ease-out forwards',
         'zoom-in': 'zoom-in 0.3s ease-out forwards',
