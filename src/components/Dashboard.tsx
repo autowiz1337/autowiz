@@ -12,7 +12,7 @@ import { mapBackendReportToDashboard } from '../utils/reportMapper';
 import SEO from './SEO';
 
 // --- CONFIGURATION ---
-const R2_BASE_URL = 'https://pub-43d994e414f04400938f65714774302c.r2.dev'; 
+const R2_BASE_URL = 'https://pub-ce9ab66f3fc6436f92644d16b5892006.r2.dev'; 
 
 const POSTING_SITES = [
     { name: 'Autovit.ro', url: 'https://www.autovit.ro' },    

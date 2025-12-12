@@ -22,7 +22,7 @@ The landing page serves as the primary conversion funnel. It includes several hi
 ---
 
 ## 2. Dashboard Interface
-Accessed via the "Log in" button or automatically via a magic link (e.g., `/dashboard?id=record_123`).
+Accessed via the "Log in" button or automatically via a magic link (e.g., `/dashboard?id=record_1765533411401.json`).
 
 ### Navigation
 The sidebar provides access to four main views:
@@ -84,9 +84,30 @@ The application now manages browser tab titles dynamically based on the active r
 *   **Invite**: "VIP Access | Velocity AI"
 
 ### Data Hydration
-*   **Source**: The dashboard hydrates client-side by fetching JSON from a public Cloudflare R2 bucket.
-*   **Mechanism**: It reads the `?id=` query parameter using `useSearchParams` to construct the fetch URL.
-*   **Security**: URLs are treated as "Capability URLs" (possession of the link grants read access).
+The dashboard operates as a "stateless" viewer, hydrating entirely from external JSON sources (Cloudflare R2).
+
+1.  **URL Resolution**:
+    *   The app checks for an `id` query parameter (e.g., `/dashboard?id=record_1765533411401.json`).
+    *   If the ID starts with `http`, it is treated as a full absolute URL.
+    *   Otherwise, it is appended to the `R2_BASE_URL` constant configured in the code (`https://pub-ce9ab66f3fc6436f92644d16b5892006.r2.dev`).
+
+2.  **Fetching Strategy**:
+    *   On component mount, a `useEffect` hook triggers a `fetch()` request.
+    *   **Loading State**: Displays a branded loading spinner while awaiting the response.
+    *   **Error Handling**: Catches 404s, network errors, or malformed JSON and displays a user-friendly "Access Error" screen with a retry button.
+
+3.  **Data Transformation (Mapper)**:
+    *   Raw JSON from the backend (often in PascalCase or CSV formats) is passed through `src/utils/reportMapper.ts`.
+    *   **CSV Parsing**: Fields like `Images` and `topSellingPoints` are split by commas into arrays.
+    *   **Video Selection**: The logic specifically selects the *second* video URL (index 1) from the CSV list, falling back to the first if only one exists.
+    *   **Date Formatting**: ISO dates are converted to readable `en-US` locale strings.
+
+4.  **Mock Fallback**:
+    *   If no `id` is provided, the system simulates a 1-second network delay and loads a hardcoded "Mercedes-AMG" demo report to ensure the dashboard is always explorable for new visitors.
+
+5.  **Security Model**:
+    *   URLs are treated as **Capability URLs** (possession of the link grants read access).
+    *   No authentication token is required for the read-only view, facilitating easy sharing with clients.
 
 ---
 
