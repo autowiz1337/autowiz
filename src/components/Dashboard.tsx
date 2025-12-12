@@ -42,7 +42,7 @@ const Dashboard: React.FC = () => {
   // Router Params
   const [searchParams] = useSearchParams();
   
-  // Data State
+  // Data State  
   const [reportData, setReportData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
