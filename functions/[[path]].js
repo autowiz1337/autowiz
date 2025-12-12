@@ -1,8 +1,8 @@
 export async function onRequest(context) {
-  // Attempt to fetch the static asset
+  // Attempt to fetch the static asset (CSS, JS, Images, etc.)
   const response = await context.next();
 
-  // If the asset exists (status 200-399), return it
+  // If the asset exists (status 200-399), return it as is
   if (response.status !== 404) {
     return response;
   }
