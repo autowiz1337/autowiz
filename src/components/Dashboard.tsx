@@ -497,7 +497,7 @@ const Dashboard: React.FC = () => {
                            {/* Video Actions */}
                            <div className="flex flex-col md:flex-row items-center justify-center gap-4 mt-6">
                                <button 
-                                   onClick={() => copyToClipboard(`https://youtu.be/${reportData.youtubeId}`, 'youtube')}
+                                   onClick={() => copyToClipboard(`https://www.youtube.com/watch?v=${reportData.youtubeId}`, 'youtube')}
                                    className={`px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 shadow-lg transition-all ${
                                        copiedField === 'youtube' ? 'bg-green-600 text-white' : 'bg-red-600 hover:bg-red-500 text-white'
                                    }`}
