@@ -16,7 +16,7 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
       <div className="max-w-7xl mx-auto px-6 relative z-10 text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs font-medium text-indigo-600 dark:text-indigo-300 mb-8 animate-fade-in shadow-sm dark:shadow-none">
           <Sparkles className="w-3 h-3" />
-          <span>Velocity AI 2.1: Cloudflare Ready</span>
+          <span>Velocity AI 3.0: Cloudflare Optimized</span>
         </div>
 
         <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-[1.1] text-slate-900 dark:text-white">

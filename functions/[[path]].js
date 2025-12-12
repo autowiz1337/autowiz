@@ -1,13 +1,15 @@
 export async function onRequest(context) {
-  // Attempt to fetch the static asset (CSS, JS, Images, etc.)
+  // 1. Attempt to fetch the asset from the build output (static files)
   const response = await context.next();
 
-  // If the asset exists (status 200-399), return it as is
+  // 2. If found (200, 304, etc), return it immediately.
   if (response.status !== 404) {
     return response;
   }
 
-  // If 404 (not found), it's likely a client-side route (e.g. /dashboard)
-  // Serve index.html instead, allowing React Router to handle the view.
-  return context.env.ASSETS.fetch(new URL('/', context.request.url));
+  // 3. If 404, it means the user requested a client-side route (e.g., /dashboard).
+  //    Serve index.html instead so React Router can take over.
+  const indexResponse = await context.env.ASSETS.fetch(new URL('/', context.request.url));
+  
+  return indexResponse;
 }
