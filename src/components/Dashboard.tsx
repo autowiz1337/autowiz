@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, Target, ImageIcon, FileText, Save, Loader2, Check, ExternalLink, 
@@ -54,29 +55,44 @@ const Dashboard: React.FC = () => {
         const params = new URLSearchParams(window.location.search);
         const reportId = params.get('id');
 
-        // MOCK FALLBACK for Demo purposes if no ID is present
+        // Helper to load mock data
+        const loadMockData = () => {
+             // Using stable Unsplash images for demo consistency
+             const mockRaw: BackendReport = {
+                "Id": 2,
+                "CreatedAt": new Date().toISOString(), 
+                "Url": "https://www.autovit.ro/mock-listing",
+                "Titlu": "2024 Mercedes-Benz CLE Mercedes-AMG 53 4MATIC+",
+                "listingDescription": "Cât de des te-ai întrebat dacă o mașină sport poate fi, în realitate, cel mai sigur loc pentru familia ta? Într-o piață auto unde majoritatea modelelor de performanță sacrifică vizibilitatea...",
+                "targetPersona": "Antreprenor/Executiv matur, focusat pe siguranță",
+                "emotionalTrigger": "Siguranță & Protecție (Security)",
+                "topSellingPoints": "Putere (449 CP) interpretată ca marjă de siguranță,Sistem 4MATIC+ pentru stabilitate,Faruri Digital Light",
+                "Images": "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?q=80&w=2000&auto=format&fit=crop,https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=2000&auto=format&fit=crop,https://images.unsplash.com/photo-1542282088-fe8426682b8f?q=80&w=2000&auto=format&fit=crop,https://images.unsplash.com/photo-1617788138017-80ad40651399?q=80&w=2000&auto=format&fit=crop",
+                "Video": "", 
+                "ZIP Images": "#",
+                "Youtube ID": "VZYsx5D8oIY" // Mercedes review video
+             };
+             const mapped = mapBackendReportToDashboard(mockRaw);
+             setReportData(mapped);
+             setEditableTitle(mapped.title);
+             setEditableDescription(mapped.description);
+             
+             // If we tried to load an ID but failed, warn the user we are in demo mode
+             if (reportId) {
+                 setActiveNotification({
+                     id: 99,
+                     title: "Demo Mode Active",
+                     message: `Could not load Report ID: ${reportId}. Showing demo data instead.`,
+                     icon: AlertTriangle,
+                     color: "text-yellow-500"
+                 });
+             }
+        };
+
+        // If no ID provided, just load mock immediately
         if (!reportId) {
-             // Simulate loading mock data for demo experience
              setTimeout(() => {
-                 // Using the structure from your provided JSON sample
-                 const mockRaw: BackendReport = {
-                    "Id": 2,
-                    "CreatedAt": "2025-12-11 08:41:57+00:00",
-                    "Url": "https://www.autovit.ro/mock-listing",
-                    "Titlu": "2024 Mercedes-Benz CLE Mercedes-AMG 53 4MATIC+",
-                    "listingDescription": "Cât de des te-ai întrebat dacă o mașină sport poate fi, în realitate, cel mai sigur loc pentru familia ta? Într-o piață auto unde majoritatea modelelor de performanță sacrifică vizibilitatea...",
-                    "targetPersona": "Antreprenor/Executiv matur, focusat pe siguranță",
-                    "emotionalTrigger": "Siguranță & Protecție (Security)",
-                    "topSellingPoints": "Putere (449 CP) interpretată ca marjă de siguranță,Sistem 4MATIC+ pentru stabilitate,Faruri Digital Light",
-                    "Images": "https://ireland.apollo.olxcdn.com/v1/files/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmbiI6InqnY2JuMm9jdGg4NzMtQVVUT1ZJVFJPIiwidyI6W3siZm4iOiJxN216NTNiaWZwemstQVVUT1ZJVFJPIiwicyI6IjE2IiwiYSI6IjAiLCJwIjoiMTAsLTEwIn1dfQ.pDpuE1CXa6VIu3ioBPPeyNZQoD4WJouguB4C22yIbqU/image,https://ireland.apollo.olxcdn.com/v1/files/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmbiI6IjJuZXRmbm42ZHlxMTItQVVUT1ZJVFJPIiwidyI6W3siZm4iOiJxN216NTNiaWZwemstQVVUT1ZJVFJPIiwicyI6IjE2IiwiYSI6IjAiLCJwIjoiMTAsLTEwIn1dfQ.mXEHl4CsVoYJUQ8ZFmnmKti0sLowhEJHCenPQqZJjNM/image",
-                    "Video": "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4,https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
-                    "ZIP Images": "#",
-                    "Youtube ID": "VZYsx5D8oIY"
-                 };
-                 const mapped = mapBackendReportToDashboard(mockRaw);
-                 setReportData(mapped);
-                 setEditableTitle(mapped.title);
-                 setEditableDescription(mapped.description);
+                 loadMockData();
                  setIsLoading(false);
              }, 1000);
              return;
@@ -88,7 +104,12 @@ const Dashboard: React.FC = () => {
             const url = reportId.startsWith('http') ? reportId : `${R2_BASE_URL}/${reportId}`;
             
             const response = await fetch(url);
-            if (!response.ok) throw new Error("Failed to load report data.");
+            if (!response.ok) {
+                console.warn("Fetch failed, falling back to mock data.");
+                loadMockData();
+                setIsLoading(false);
+                return;
+            }
             
             const rawData: BackendReport = await response.json();
             const mapped = mapBackendReportToDashboard(rawData);
@@ -97,8 +118,8 @@ const Dashboard: React.FC = () => {
             setEditableTitle(mapped.title);
             setEditableDescription(mapped.description);
         } catch (err) {
-            console.error(err);
-            setError("Could not load the dashboard report. Please check the ID.");
+            console.error("Network error, falling back to mock data:", err);
+            loadMockData();
         } finally {
             setIsLoading(false);
         }
@@ -110,6 +131,9 @@ const Dashboard: React.FC = () => {
   // Notification Stream Logic
   useEffect(() => {
     const showNotification = (index: number) => {
+      // Only show simulated notifications if we aren't showing a system warning (like Demo Mode)
+      if (activeNotification?.id === 99) return; 
+      
       setActiveNotification(NOTIFICATIONS[index]);
       setTimeout(() => setActiveNotification(null), 5000); // Hide after 5s
     };
@@ -123,7 +147,7 @@ const Dashboard: React.FC = () => {
       clearTimeout(t2);
       clearTimeout(t3);
     };
-  }, []);
+  }, [activeNotification]);
   
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
@@ -151,12 +175,13 @@ const Dashboard: React.FC = () => {
                       <Loader2 className="w-12 h-12 text-brand-600 dark:text-brand-400 animate-spin relative z-10" />
                   </div>
                   <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">Hydrating Dashboard</h3>
-                  <p className="text-sm text-slate-500 dark:text-gray-500">Retrieving optimized assets from R2...</p>
+                  <p className="text-sm text-slate-500 dark:text-gray-500">Retrieving optimized assets...</p>
               </div>
           </div>
       );
   }
 
+  // Error state is now largely unreachable due to fallback, but kept for catastrophic failures
   if (error || !reportData) {
       return (
         <div className="min-h-screen pt-20 flex flex-col items-center justify-center text-slate-500 dark:text-gray-400 bg-slate-50 dark:bg-[#020617] px-4">
@@ -168,9 +193,9 @@ const Dashboard: React.FC = () => {
                     <AlertTriangle className="w-10 h-10 text-red-500" />
                 </div>
                 
-                <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">Access Error</h3>
+                <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">System Error</h3>
                 <p className="text-slate-600 dark:text-gray-400 mb-8 leading-relaxed">
-                    {error || "We couldn't retrieve the listing data. The ID might be invalid or expired."}
+                    {error || "We encountered a critical error loading the dashboard engine."}
                 </p>
                 
                 <div className="flex flex-col sm:flex-row gap-3">
@@ -184,7 +209,7 @@ const Dashboard: React.FC = () => {
                         onClick={() => window.location.reload()}
                         className="btn-primary flex-1 px-4 py-3 rounded-xl text-sm font-bold shadow-lg transition-all flex items-center justify-center gap-2"
                     >
-                        <RefreshCw className="w-4 h-4" /> Retry Connection
+                        <RefreshCw className="w-4 h-4" /> Retry
                     </button>
                 </div>
             </div>
@@ -206,10 +231,12 @@ const Dashboard: React.FC = () => {
              <div>
                 <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                    {activeNotification.title}
-                   <span className="flex h-2 w-2 relative">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-500"></span>
-                    </span>
+                   {activeNotification.id !== 99 && (
+                       <span className="flex h-2 w-2 relative">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-500"></span>
+                        </span>
+                   )}
                 </h4>
                 <p className="text-xs text-slate-600 dark:text-gray-400 mt-1 leading-relaxed">
                    {activeNotification.message}

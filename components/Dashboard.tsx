@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, Target, ImageIcon, FileText, Save, Loader2, Check, ExternalLink, 
@@ -7,18 +8,17 @@ import {
 } from 'lucide-react';
 import { BackendReport, DashboardData } from '../types/Report';
 import { mapBackendReportToDashboard } from '../utils/reportMapper';
-import SEO from './SEO';
 
 // --- CONFIGURATION ---
 // Replace this with your actual R2 Public Bucket URL or Worker URL
 const R2_BASE_URL = 'https://pub-43d994e414f04400938f65714774302c.r2.dev'; 
 
 const POSTING_SITES = [
-    { name: 'Autovit.ro', url: 'https://www.autovit.ro', color: 'bg-orange-600 hover:bg-orange-700' },    
-    { name: 'Carzz.ro', url: 'https://carzz.ro', color: 'bg-red-600 hover:bg-red-700' },
-    { name: 'BestAuto', url: 'https://www.bestauto.ro', color: 'bg-blue-600 hover:bg-blue-700' },
-    { name: 'Plus-Auto', url: 'https://plus-auto.ro', color: 'bg-green-600 hover:bg-green-700' },
-    { name: 'olx.ro', url: 'https://olx.ro', color: 'bg-teal-800 hover:bg-teal-900' },
+    { name: 'Autovit.ro', url: 'https://www.autovit.ro' },    
+    { name: 'Carzz.ro', url: 'https://carzz.ro' },
+    { name: 'BestAuto', url: 'https://www.bestauto.ro' },
+    { name: 'Plus-Auto', url: 'https://plus-auto.ro' },
+    { name: 'olx.ro', url: 'https://olx.ro' },
 ];
 
 const NOTIFICATIONS = [
@@ -50,7 +50,7 @@ const Dashboard: React.FC = () => {
         setIsLoading(true);
         setError(null);
 
-        // 1. Get ID from URL 
+        // 1. Get ID from URL
         const params = new URLSearchParams(window.location.search);
         const reportId = params.get('id');
 
@@ -144,7 +144,6 @@ const Dashboard: React.FC = () => {
   if (isLoading) {
       return (
           <div className="min-h-screen pt-20 flex flex-col items-center justify-center text-slate-500 dark:text-gray-400 bg-slate-50 dark:bg-[#020617]">
-              <SEO title="Loading Dashboard..." />
               <div className="bg-white dark:bg-[#0f172a] p-8 rounded-3xl border border-slate-200 dark:border-white/10 shadow-xl flex flex-col items-center">
                   <div className="relative mb-4">
                       <div className="absolute inset-0 bg-brand-500/20 rounded-full blur-xl animate-pulse"></div>
@@ -160,7 +159,6 @@ const Dashboard: React.FC = () => {
   if (error || !reportData) {
       return (
         <div className="min-h-screen pt-20 flex flex-col items-center justify-center text-slate-500 dark:text-gray-400 bg-slate-50 dark:bg-[#020617] px-4">
-            <SEO title="Error | Velocity AI" />
             <div className="bg-white dark:bg-[#0f172a] p-8 rounded-3xl border border-red-100 dark:border-red-500/20 text-center max-w-md shadow-2xl relative overflow-hidden w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-orange-500"></div>
                 
@@ -194,7 +192,6 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen pt-20 pb-12 px-4 md:px-6 max-w-[1600px] mx-auto font-sans relative animate-in fade-in duration-700">
-      <SEO title={`Report: ${reportData.title} | Velocity AI`} />
       
       {/* LEAD SIMULATOR NOTIFICATION STREAM */}
       <div className="fixed top-24 right-6 z-50 pointer-events-none">
@@ -350,7 +347,7 @@ const Dashboard: React.FC = () => {
                         <button
                             key={site.name}
                             onClick={() => window.open(site.url, '_blank')}
-                            className={`group relative overflow-hidden rounded-xl px-6 py-2.5 text-sm font-bold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl ${site.color}`}
+                            className="group relative overflow-hidden rounded-xl px-6 py-2.5 text-sm font-bold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-600 bg-[length:200%_auto] animate-gradient-x"
                         >
                             <div className="relative z-10 flex items-center gap-2">
                                {site.name}
@@ -474,7 +471,7 @@ const Dashboard: React.FC = () => {
                                {reportData.videoDownloadUrl && (
                                    <button 
                                        onClick={() => window.open(reportData.videoDownloadUrl, '_blank')}
-                                       className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg"
+                                       className="px-6 py-3 bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-900 dark:text-white rounded-xl font-bold text-sm flex items-center gap-2 transition-all"
                                    >
                                        <Download className="w-4 h-4" /> Download Raw MP4
                                    </button>
