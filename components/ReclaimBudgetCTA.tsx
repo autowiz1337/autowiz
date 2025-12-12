@@ -125,6 +125,7 @@ const ReclaimBudgetCTA: React.FC<ReclaimBudgetCTAProps> = ({ onNavigate }) => {
                     </div>
                 </div>
             </div>
+        </div>
       </div>
     </section>
   );
