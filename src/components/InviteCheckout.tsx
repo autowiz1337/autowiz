@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { CheckCircle2, Lock, ArrowRight, ShieldCheck, Zap, Loader2, AlertCircle, UserCheck, Database, Image, MapPin, Mic, Info } from 'lucide-react';
+import { CheckCircle2, Lock, ArrowRight, ShieldCheck, Zap, Loader2, AlertCircle, UserCheck, Database, Image, MapPin, Mic, Info, Home } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface InviteCheckoutProps {
   onBack: () => void;
@@ -12,6 +13,7 @@ const InviteCheckout: React.FC<InviteCheckoutProps> = ({ onBack }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [timeLeft, setTimeLeft] = useState(1800); // 30 minutes
+  const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -107,14 +109,12 @@ const InviteCheckout: React.FC<InviteCheckoutProps> = ({ onBack }) => {
          window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
          console.error('Webhook returned error');
-         // Fallback success for UX if API fails (optional)
          setIsSuccess(true);
          window.scrollTo({ top: 0, behavior: 'smooth' });
       }
 
     } catch (error) {
       console.error('Error submitting form:', error);
-      // Fallback success for resilience
       setIsSuccess(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
@@ -151,8 +151,8 @@ const InviteCheckout: React.FC<InviteCheckoutProps> = ({ onBack }) => {
                     </ul>
                 </div>
 
-                <button onClick={onBack} className="w-full py-4 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold hover:bg-slate-800 dark:hover:bg-gray-100 transition-colors shadow-lg">
-                    Return to Home
+                <button onClick={() => navigate('/')} className="w-full py-4 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold hover:bg-slate-800 dark:hover:bg-gray-100 transition-colors shadow-lg flex items-center justify-center gap-2">
+                    <Home className="w-4 h-4" /> Return to Home
                 </button>
              </div>
         </div>

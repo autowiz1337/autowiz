@@ -1,0 +1,12 @@
+
+/* Global Styles */
+body {
+  background-color: #020617;
+  color: #ffffff;
+  font-family: 'Inter', sans-serif;
+}
+
+/* 
+   NOTE: Tailwind styles are now loaded via CDN in index.html for immediate rendering.
+   Custom utilities like scrollbars have been moved to index.html <style> block.
+*/

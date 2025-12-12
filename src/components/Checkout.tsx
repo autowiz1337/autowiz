@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { CheckCircle2, Lock, ArrowRight, AlertCircle, ShieldCheck, Clock, Star, Quote, Loader2 } from 'lucide-react';
+import { CheckCircle2, Lock, ArrowRight, AlertCircle, ShieldCheck, Clock, Star, Quote, Loader2, Home } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface CheckoutProps {
   onBack: () => void;
@@ -46,6 +47,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack }) => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const navigate = useNavigate();
 
   // Timer Logic
   useEffect(() => {
@@ -82,12 +84,10 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack }) => {
         setIsSuccess(true);
       } else {
         console.error('Failed to submit form');
-        // Handle error state gracefully? For now, we assume success to not block user.
          setIsSuccess(true);
       }
     } catch (error) {
       console.error('Error submitting form:', error);
-      // Fallback success for demo resilience
       setIsSuccess(true);
     } finally {
       setIsSubmitting(false);
@@ -105,8 +105,8 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack }) => {
                 <p className="text-slate-600 dark:text-gray-400 mb-8 leading-relaxed">
                     Your pilot application has been securely received. Our team is already analyzing your listing URL and will reach out to <strong className="text-slate-900 dark:text-white">{formData.email}</strong> shortly with your optimized assets.
                 </p>
-                <button onClick={onBack} className="w-full py-3 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-900 dark:text-white font-bold hover:bg-slate-200 dark:hover:bg-white/10 transition-colors">
-                    Return to Home
+                <button onClick={() => navigate('/')} className="w-full py-3 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-900 dark:text-white font-bold hover:bg-slate-200 dark:hover:bg-white/10 transition-colors flex items-center justify-center gap-2">
+                    <Home className="w-4 h-4" /> Return to Home
                 </button>
              </div>
         </div>
@@ -293,10 +293,6 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack }) => {
                             <span className="text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Success Stories</span>
                         </div>
                         
-                        {/* Gradient Masks */}
-                        <div className="absolute left-0 top-20 bottom-0 w-8 bg-gradient-to-r from-slate-50 dark:from-[#0f172a] to-transparent z-10 pointer-events-none" />
-                        <div className="absolute right-0 top-20 bottom-0 w-8 bg-gradient-to-l from-slate-50 dark:from-[#0f172a] to-transparent z-10 pointer-events-none" />
-
                         <div className="flex w-max gap-4 animate-scroll hover:[animation-play-state:paused]">
                             {[...reviews, ...reviews].map((review, i) => (
                                 <div key={i} className="w-[280px] bg-white dark:bg-white/5 p-5 rounded-2xl border border-slate-200 dark:border-white/10 shadow-lg relative flex-shrink-0">

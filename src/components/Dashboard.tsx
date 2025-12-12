@@ -6,11 +6,12 @@ import {
   Gauge, Copy, Lock, Share2, AlignLeft, Search, ShieldCheck, ScanEye, Pencil, Youtube,
   AlertTriangle, RefreshCw, Home
 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import { BackendReport, DashboardData } from '../types/Report';
 import { mapBackendReportToDashboard } from '../utils/reportMapper';
+import SEO from './SEO';
 
 // --- CONFIGURATION ---
-// Replace this with your actual R2 Public Bucket URL or Worker URL
 const R2_BASE_URL = 'https://pub-43d994e414f04400938f65714774302c.r2.dev'; 
 
 const POSTING_SITES = [
@@ -41,24 +42,21 @@ const Dashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Editable State
+  // Editable State with Persistance Key
   const [editableDescription, setEditableDescription] = useState("");
   const [editableTitle, setEditableTitle] = useState("");
+  const [storageKey, setStorageKey] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchReport = async () => {
         setIsLoading(true);
         setError(null);
 
-        // 1. Get ID from URL
         const params = new URLSearchParams(window.location.search);
         const reportId = params.get('id');
 
-        // MOCK FALLBACK for Demo purposes if no ID is present
         if (!reportId) {
-             // Simulate loading mock data for demo experience
              setTimeout(() => {
-                 // Using the structure from your provided JSON sample
                  const mockRaw: BackendReport = {
                     "Id": 2,
                     "CreatedAt": "2025-12-11 08:41:57+00:00",
@@ -75,18 +73,19 @@ const Dashboard: React.FC = () => {
                  };
                  const mapped = mapBackendReportToDashboard(mockRaw);
                  setReportData(mapped);
+                 
+                 // Initial Data Load
                  setEditableTitle(mapped.title);
                  setEditableDescription(mapped.description);
+                 setStorageKey(`velocity_draft_${mapped.id}`);
+                 
                  setIsLoading(false);
              }, 1000);
              return;
         }
 
         try {
-            // 2. Fetch from R2
-            // If the ID is a full URL, use it. Otherwise construct R2 URL.
             const url = reportId.startsWith('http') ? reportId : `${R2_BASE_URL}/${reportId}`;
-            
             const response = await fetch(url);
             if (!response.ok) throw new Error("Failed to load report data.");
             
@@ -94,8 +93,20 @@ const Dashboard: React.FC = () => {
             const mapped = mapBackendReportToDashboard(rawData);
             
             setReportData(mapped);
-            setEditableTitle(mapped.title);
-            setEditableDescription(mapped.description);
+            setStorageKey(`velocity_draft_${mapped.id}`);
+            
+            // Check LocalStorage for drafts first
+            const savedDraft = localStorage.getItem(`velocity_draft_${mapped.id}`);
+            if (savedDraft) {
+                const parsed = JSON.parse(savedDraft);
+                setEditableTitle(parsed.title || mapped.title);
+                setEditableDescription(parsed.description || mapped.description);
+                toast.success("Loaded saved draft");
+            } else {
+                setEditableTitle(mapped.title);
+                setEditableDescription(mapped.description);
+            }
+
         } catch (err) {
             console.error(err);
             setError("Could not load the dashboard report. Please check the ID.");
@@ -111,7 +122,7 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     const showNotification = (index: number) => {
       setActiveNotification(NOTIFICATIONS[index]);
-      setTimeout(() => setActiveNotification(null), 5000); // Hide after 5s
+      setTimeout(() => setActiveNotification(null), 5000); 
     };
 
     const t1 = setTimeout(() => showNotification(0), 4000);
@@ -128,22 +139,34 @@ const Dashboard: React.FC = () => {
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
     setCopiedField(field);
+    toast.success("Copied to clipboard!");
     setTimeout(() => setCopiedField(null), 2000);
   };
 
   const handleSave = () => {
     setIsSaving(true);
-    // Mock save delay
+    
+    // Save to LocalStorage
+    if (storageKey) {
+        localStorage.setItem(storageKey, JSON.stringify({
+            title: editableTitle,
+            description: editableDescription,
+            timestamp: Date.now()
+        }));
+    }
+
     setTimeout(() => {
         setIsSaving(false);
         setSaveSuccess(true);
+        toast.success("Draft saved successfully");
         setTimeout(() => setSaveSuccess(false), 3000);
-    }, 1000);
+    }, 800);
   };
 
   if (isLoading) {
       return (
           <div className="min-h-screen pt-20 flex flex-col items-center justify-center text-slate-500 dark:text-gray-400 bg-slate-50 dark:bg-[#020617]">
+              <SEO title="Loading Dashboard..." />
               <div className="bg-white dark:bg-[#0f172a] p-8 rounded-3xl border border-slate-200 dark:border-white/10 shadow-xl flex flex-col items-center">
                   <div className="relative mb-4">
                       <div className="absolute inset-0 bg-brand-500/20 rounded-full blur-xl animate-pulse"></div>
@@ -159,6 +182,7 @@ const Dashboard: React.FC = () => {
   if (error || !reportData) {
       return (
         <div className="min-h-screen pt-20 flex flex-col items-center justify-center text-slate-500 dark:text-gray-400 bg-slate-50 dark:bg-[#020617] px-4">
+            <SEO title="Error | Velocity AI" />
             <div className="bg-white dark:bg-[#0f172a] p-8 rounded-3xl border border-red-100 dark:border-red-500/20 text-center max-w-md shadow-2xl relative overflow-hidden w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-orange-500"></div>
                 
@@ -180,7 +204,7 @@ const Dashboard: React.FC = () => {
                     </button>
                     <button
                         onClick={() => window.location.reload()}
-                        className="flex-1 px-4 py-3 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-brand-500/20 transition-all flex items-center justify-center gap-2"
+                        className="btn-primary flex-1 px-4 py-3 rounded-xl text-sm font-bold shadow-lg transition-all flex items-center justify-center gap-2"
                     >
                         <RefreshCw className="w-4 h-4" /> Retry Connection
                     </button>
@@ -192,6 +216,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen pt-20 pb-12 px-4 md:px-6 max-w-[1600px] mx-auto font-sans relative animate-in fade-in duration-700">
+      <SEO title={`Report: ${reportData.title} | Velocity AI`} />
       
       {/* LEAD SIMULATOR NOTIFICATION STREAM */}
       <div className="fixed top-24 right-6 z-50 pointer-events-none">
@@ -249,8 +274,8 @@ const Dashboard: React.FC = () => {
             {/* NEW OPTIMIZE BUTTON */}
             <div className="mt-6">
                <button 
-                  onClick={() => window.open('?page=checkout', '_blank')}
-                  className="w-full relative rounded-xl px-4 py-3 text-sm font-bold text-white shadow-lg shadow-brand-500/30 overflow-hidden transition-all duration-1000 ease-hypnotic hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(217,70,239,0.5)] bg-gradient-to-r from-brand-500 via-accent-purple to-brand-500 bg-[length:200%_auto] animate-gradient-x flex items-center justify-center gap-2 whitespace-nowrap"
+                  onClick={() => window.open('/checkout', '_blank')}
+                  className="btn-primary w-full relative rounded-xl px-4 py-3 text-sm font-bold text-white shadow-lg overflow-hidden transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-2 whitespace-nowrap"
                >
                   <Sparkles className="w-4 h-4" />
                   Optimize New Listing
@@ -322,7 +347,7 @@ const Dashboard: React.FC = () => {
                    <button 
                     onClick={handleSave}
                     disabled={isSaving}
-                    className="w-full xl:w-auto px-6 py-2.5 bg-brand-600 hover:bg-brand-500 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-brand-500/20 transition-all hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="btn-primary w-full xl:w-auto px-6 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-all hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed"
                    >
                      {isSaving ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -492,7 +517,7 @@ const Dashboard: React.FC = () => {
                           <div className="flex justify-center mt-6">
                               <button 
                                    onClick={() => window.open(reportData.videoDownloadUrl, '_blank')}
-                                   className="px-12 py-4 bg-brand-600 hover:bg-brand-500 text-white rounded-2xl font-bold text-lg flex items-center gap-3 shadow-xl shadow-brand-500/30 transition-all hover:scale-[1.02]"
+                                   className="btn-primary px-12 py-4 rounded-2xl font-bold text-lg flex items-center gap-3 shadow-xl transition-all hover:scale-[1.02]"
                                >
                                    <Download className="w-6 h-6" /> Download Video
                                </button>
@@ -551,7 +576,7 @@ const Dashboard: React.FC = () => {
                               {reportData.zipDownloadUrl && reportData.zipDownloadUrl !== '#' ? (
                                   <button 
                                       onClick={() => window.open(reportData.zipDownloadUrl, '_blank')}
-                                      className="px-12 py-4 bg-brand-600 hover:bg-brand-500 text-white rounded-2xl font-bold text-lg flex items-center gap-3 shadow-xl shadow-brand-500/30 transition-all hover:scale-[1.02]"
+                                      className="btn-primary px-12 py-4 rounded-2xl font-bold text-lg flex items-center gap-3 shadow-xl transition-all hover:scale-[1.02]"
                                   >
                                       <Download className="w-6 h-6" /> Download All Images (.ZIP)
                                   </button>
@@ -605,7 +630,7 @@ const Dashboard: React.FC = () => {
                                 className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all shadow-md ${
                                     copiedField === 'desc' 
                                     ? 'bg-green-600 text-white' 
-                                    : 'bg-brand-600 hover:bg-brand-500 text-white shadow-brand-500/20'
+                                    : 'btn-primary'
                                 }`}
                             >
                                 {copiedField === 'desc' ? (

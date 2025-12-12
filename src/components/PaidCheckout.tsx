@@ -92,13 +92,11 @@ const TeamAssignment: React.FC<{ customerName: string }> = ({ customerName }) =>
     const [statuses, setStatuses] = useState<string[]>([]);
     const [messages, setMessages] = useState<Array<{id: number, sender: string, text: string}>>([]);
 
-    // Extract first name for personalization, fallback to "there" if empty
     const firstName = customerName ? customerName.split(' ')[0] : 'there';
 
-    // 1. Handle Assignments Sequence
     useEffect(() => {
         const timers: number[] = [];
-        setStatuses([]); // Reset on mount
+        setStatuses([]); 
 
         teamMembers.forEach((member) => {
             const assignTimer = window.setTimeout(() => {
@@ -110,32 +108,23 @@ const TeamAssignment: React.FC<{ customerName: string }> = ({ customerName }) =>
         return () => timers.forEach(t => clearTimeout(t));
     }, []);
 
-    // 2. Handle Chat Sequence (Starts only after EVERYONE is assigned)
     useEffect(() => {
-        // Only start if all members are assigned
         if (statuses.length !== teamMembers.length) return;
 
         let isMounted = true;
 
         const runChatSequence = async () => {
-            // Small pause after the last person is assigned before chatting starts
             await new Promise(resolve => setTimeout(resolve, 1500));
 
             for (let i = 0; i < teamMembers.length; i++) {
                 if (!isMounted) break;
                 
-                // Random delay between 5 to 8 seconds (5000ms - 8000ms)
                 const delay = Math.floor(Math.random() * (8000 - 5000 + 1) + 5000);
-                
                 await new Promise(resolve => setTimeout(resolve, delay));
-                
                 if (!isMounted) break;
 
                 const member = teamMembers[i];
-                // Select a random message from the member's variations
                 const randomTemplate = member.messages[Math.floor(Math.random() * member.messages.length)];
-                
-                // Personalize the message
                 const personalizedMessage = randomTemplate.replace('{name}', firstName);
 
                 setMessages(prev => [...prev, { 
@@ -154,18 +143,16 @@ const TeamAssignment: React.FC<{ customerName: string }> = ({ customerName }) =>
     return (
         <div className="mt-8 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-6">
             
-            {/* Live Messages Stream (Moved to Top) */}
             {messages.length > 0 && (
                 <div className="mb-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
                     <div className="flex items-center gap-2 mb-3">
                         <MessageSquare className="w-3 h-3 text-slate-400" />
                         <span className="text-xs font-bold text-slate-400 uppercase">Team Chat</span>
                     </div>
-                    {/* Removed scroll/height restrictions to show full content */}
                     <div className="space-y-3">
                         {messages.map((msg) => (
                             <div key={msg.id} className="flex gap-3 animate-chat-appear">
-                                <div className="w-6 h-6 rounded-full bg-brand-100 dark:bg-brand-500/20 flex items-center justify-center text-[10px] font-bold text-brand-700 dark:text-brand-300 flex-shrink-0 mt-1">
+                                <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center text-[10px] font-bold text-indigo-700 dark:text-indigo-300 flex-shrink-0 mt-1">
                                     {msg.sender.split(' ')[0][0]}
                                 </div>
                                 <div className="bg-white dark:bg-[#0f172a] p-2.5 rounded-r-xl rounded-bl-xl border border-slate-200 dark:border-white/10 shadow-sm">
@@ -181,26 +168,25 @@ const TeamAssignment: React.FC<{ customerName: string }> = ({ customerName }) =>
 
             <div className="flex items-center gap-2 mb-4">
                 <div className="relative">
-                    <Users className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+                    <Users className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                     <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                 </div>
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wide">Live Team Allocation</h3>
             </div>
 
-            {/* Team List */}
             <div className="space-y-3 mb-6">
                 {teamMembers.map((member, idx) => {
                     const isAssigned = statuses.includes(member.name);
                     return (
                         <div key={idx} className={`flex items-center justify-between p-3 rounded-xl border transition-all duration-500 ${
                             isAssigned 
-                                ? 'bg-white dark:bg-brand-900/20 border-brand-200 dark:border-brand-500/30 shadow-sm animate-pop' 
+                                ? 'bg-white dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-500/30 shadow-sm animate-pop' 
                                 : 'bg-transparent border-transparent opacity-50'
                         }`}>
                             <div className="flex items-center gap-3">
                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
                                     isAssigned 
-                                        ? 'bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300' 
+                                        ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300' 
                                         : 'bg-slate-200 dark:bg-white/10 text-slate-500'
                                 }`}>
                                     {member.name.split(' ').map(n => n[0]).join('')}
@@ -240,7 +226,6 @@ const TeamAssignment: React.FC<{ customerName: string }> = ({ customerName }) =>
     );
 };
 
-// --- STEP 2: PAYMENT FORM COMPONENT ---
 interface FormDataType {
   name: string;
   email: string;
@@ -254,7 +239,6 @@ const PaymentForm: React.FC<{ onSuccess: () => void; formData: FormDataType }> =
   const [error, setError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
 
-  // Extract first name for dynamic greeting
   const firstName = formData.name ? formData.name.split(' ')[0] : 'there';
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -271,7 +255,6 @@ const PaymentForm: React.FC<{ onSuccess: () => void; formData: FormDataType }> =
 
     if (cardElement) {
       try {
-        // Create Payment Method (Validate Card)
         const { error, paymentMethod } = await stripe.createPaymentMethod({
           type: 'card',
           card: cardElement,
@@ -288,7 +271,6 @@ const PaymentForm: React.FC<{ onSuccess: () => void; formData: FormDataType }> =
         }
 
         if (paymentMethod) {
-             // Send Successful Token to Automation Webhook
              await fetch('https://app.autowizz.cfd/webhook/new-order', {
                  method: 'POST',
                  headers: { 'Content-Type': 'application/json' },
@@ -313,7 +295,6 @@ const PaymentForm: React.FC<{ onSuccess: () => void; formData: FormDataType }> =
 
   return (
     <>
-        {/* SUCCESS MANAGER HUMANIZATION */}
         <div className="flex items-start gap-4 mb-6 bg-blue-50 dark:bg-blue-900/10 p-4 rounded-xl border border-blue-100 dark:border-blue-800/30 animate-in fade-in slide-in-from-top-2">
             <div className="relative flex-shrink-0">
                 <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80" alt="Sarah" className="w-10 h-10 rounded-full object-cover border-2 border-white dark:border-[#0f172a]" />
@@ -331,12 +312,9 @@ const PaymentForm: React.FC<{ onSuccess: () => void; formData: FormDataType }> =
 
         <form onSubmit={handleSubmit} className="space-y-6">
         
-        {/* High-Visibility Gradient Border Wrapper for Card Input */}
-        <div className="relative rounded-xl p-[3px] shadow-[0_0_40px_-10px_rgba(217,70,239,0.3)] group">
-            {/* Animated Gradient Background */}
-            <div className="absolute inset-0 bg-gradient-to-r from-brand-500 via-accent-purple to-brand-500 bg-[length:200%_auto] animate-gradient-x opacity-100 rounded-xl" />
+        <div className="relative rounded-xl p-[3px] shadow-[0_0_40px_-10px_rgba(124,58,237,0.3)] group">
+            <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 opacity-100 rounded-xl" />
             
-            {/* Inner Container */}
             <div className="relative bg-white dark:bg-[#1e293b] p-5 rounded-[9px]">
                 <CardElement
                 options={{
@@ -368,7 +346,7 @@ const PaymentForm: React.FC<{ onSuccess: () => void; formData: FormDataType }> =
         <button
             type="submit"
             disabled={!stripe || processing}
-            className="w-full py-5 rounded-xl text-xl font-bold text-white shadow-xl shadow-brand-500/20 transition-all duration-1000 ease-hypnotic hover:scale-[1.02] hover:shadow-[0_0_50px_-10px_rgba(14,165,233,0.5)] bg-gradient-to-r from-brand-600 via-accent-purple to-brand-600 bg-[length:200%_auto] animate-gradient-x flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+            className="btn-primary w-full py-5 rounded-xl text-xl font-bold shadow-xl transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
         >
             {processing ? (
             <Loader2 className="w-6 h-6 animate-spin" />
@@ -393,14 +371,11 @@ const PaymentForm: React.FC<{ onSuccess: () => void; formData: FormDataType }> =
         </div>
         </form>
 
-        {/* Team Assignment Section */}
         <TeamAssignment customerName={formData.name} />
     </>
   );
 };
 
-
-// --- MAIN PAGE COMPONENT ---
 const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
   const [step, setStep] = useState<1 | 2>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -410,27 +385,22 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
     listingUrl: '',
     voiceGender: 'female'
   });
-  const [timeLeft, setTimeLeft] = useState(1800); // 30 minutes
+  const [timeLeft, setTimeLeft] = useState(1800);
   
-  // URL Scanning State
   const [scanState, setScanState] = useState<'idle' | 'scanning' | 'complete'>('idle');
   const [detectedMake, setDetectedMake] = useState<string | null>(null);
   const [detectedPlatform, setDetectedPlatform] = useState<string | null>(null);
   
-  // New interaction states
   const [nameBlurred, setNameBlurred] = useState(false);
   const [urlError, setUrlError] = useState<string | null>(null);
 
-  // Dynamic slots configuration (Satisfies total <= 12 constraint)
   const totalDailySlots = 12;
   
-  // Initialize remainingSlots with persistence logic (24h validity)
   const [remainingSlots] = useState(() => {
     const STORAGE_KEY = 'velocity_pilot_slots';
     const TIMESTAMP_KEY = 'velocity_pilot_timestamp';
     const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
 
-    // Check if we are in a browser environment
     if (typeof window !== 'undefined') {
         const storedSlots = localStorage.getItem(STORAGE_KEY);
         const storedTime = localStorage.getItem(TIMESTAMP_KEY);
@@ -439,30 +409,23 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
             const now = Date.now();
             const timePassed = now - parseInt(storedTime, 10);
 
-            // If less than 24 hours have passed, return stored value
             if (timePassed < TWENTY_FOUR_HOURS) {
                 return parseInt(storedSlots, 10);
             }
         }
 
-        // Generate new number if expired or not found (between 6 and 12)
         const newSlots = Math.floor(Math.random() * (12 - 6 + 1)) + 6;
         localStorage.setItem(STORAGE_KEY, newSlots.toString());
         localStorage.setItem(TIMESTAMP_KEY, Date.now().toString());
         return newSlots;
     }
-    
-    // Default fallback for SSR or initial render
     return 8; 
   });
 
-  // Generate random dealership count for social proof banner (between 3 and 9)
   const [dealershipCount] = useState(() => Math.floor(Math.random() * (9 - 3 + 1)) + 3);
 
-  // Helper for email validation
   const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  // Advanced URL Scanning Effect
   useEffect(() => {
     if (!formData.listingUrl) {
         setScanState('idle');
@@ -470,13 +433,10 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
         return;
     }
 
-    // Debounce scan to avoid flickering typing
     const delayScan = setTimeout(() => {
-        // Trigger scanning only if URL is substantial
         if (formData.listingUrl.length > 8) {
              const lowerUrl = formData.listingUrl.toLowerCase();
              
-             // Strict Check for autovit.ro
              if (!lowerUrl.includes('autovit.ro')) {
                  setScanState('idle');
                  setUrlError("Use only Autovit Listing URL");
@@ -487,9 +447,7 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
             setScanState('scanning');
             setDetectedPlatform('autovit');
 
-            // Simulate scanning duration for realism
             setTimeout(() => {
-                // Extract make from URL
                 const foundMake = CAR_MAKES.find(make => lowerUrl.includes(make));
                 setDetectedMake(foundMake || null);
                 setScanState('complete');
@@ -503,7 +461,6 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
     return () => clearTimeout(delayScan);
   }, [formData.listingUrl]);
 
-  // Timer Logic
   useEffect(() => {
     const timer = setInterval(() => {
       setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
@@ -517,19 +474,13 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
-  // STEP 1 SUBMISSION
   const handleStep1Submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Prevent submission if URL error
-    if (urlError) {
-        return;
-    }
+    if (urlError) return;
 
     setIsSubmitting(true);
 
     try {
-      // 1. Send Data to Webhook (Initial Lead Capture)
       await fetch('https://app.autowizz.cfd/webhook/new-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -541,11 +492,9 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
         }),
       });
 
-      // 2. Redirect to Step 2 (Payment)
       setTimeout(() => {
         setStep(2);
         setIsSubmitting(false);
-        // Scroll to top
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }, 800); 
       
@@ -563,20 +512,19 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-white relative pt-24 pb-12">
       
-      {/* PROGRESS BAR HEADER */}
       <div className="fixed top-0 left-0 w-full h-16 bg-white dark:bg-[#0f172a] border-b border-slate-200 dark:border-white/10 z-50 flex flex-col justify-center shadow-sm">
         <div className="max-w-4xl mx-auto w-full px-6">
             <div className="flex justify-between items-end mb-2">
-                <span className="text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider">
+                <span className="text-xs font-bold text-slate-50 dark:text-gray-400 uppercase tracking-wider">
                     {step === 1 ? 'Step 1: Account Details' : 'Step 2: Secure Payment'}
                 </span>
-                <span className="text-xs font-bold text-brand-600 dark:text-brand-400">
+                <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
                     {step === 1 ? '70%' : '95%'} Complete
                 </span>
             </div>
             <div className="w-full h-2 bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
                 <div 
-                    className="h-full bg-gradient-to-r from-brand-500 to-accent-purple transition-all duration-1000 ease-out rounded-full shadow-[0_0_10px_rgba(14,165,233,0.5)]" 
+                    className="h-full bg-gradient-to-r from-indigo-500 to-purple-600 transition-all duration-1000 ease-out rounded-full shadow-[0_0_10px_rgba(14,165,233,0.5)]" 
                     style={{ width: step === 1 ? '70%' : '95%' }}
                 />
             </div>
@@ -584,11 +532,7 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
       </div>
 
       <div className="max-w-7xl mx-auto px-6">
-        {/* REMOVED BACK BUTTON TO PREVENT LEAKAGE */}
-
-        {/* URGENCY BANNER */}
         <div className="max-w-2xl mx-auto mb-8 space-y-4 animate-fade-in">
-             {/* Live Activity Banner */}
              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-500/30 px-4 py-2 rounded-full flex items-center justify-center gap-2 text-xs font-medium text-blue-700 dark:text-blue-300 w-fit mx-auto">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
@@ -597,19 +541,18 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
                 {dealershipCount} other dealerships in <span className="font-bold underline">Your Area</span> are optimizing listings right now.
              </div>
 
-             {/* Scarcity Timer */}
-             <div className="bg-brand-50 dark:bg-brand-900/10 border border-brand-100 dark:border-brand-500/20 p-4 rounded-xl flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-brand-100 dark:bg-brand-500/20 flex items-center justify-center flex-shrink-0">
-                    <Zap className="w-5 h-5 text-brand-600 dark:text-brand-400 animate-pulse" />
+             <div className="bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-500/20 p-4 rounded-xl flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
+                    <Zap className="w-5 h-5 text-indigo-600 dark:text-indigo-400 animate-pulse" />
                 </div>
                 <div className="flex-1">
                     <div className="flex justify-between items-center mb-1">
-                        <div className="text-sm font-bold text-brand-900 dark:text-brand-100">
+                        <div className="text-sm font-bold text-indigo-900 dark:text-indigo-100">
                             High Demand: <span className="text-red-500">{remainingSlots} of {totalDailySlots}</span> Daily Pilot Slots Remaining
                         </div>
-                        <div className="font-mono text-sm font-bold text-brand-600 dark:text-brand-400">{formatTime(timeLeft)}</div>
+                        <div className="font-mono text-sm font-bold text-indigo-600 dark:text-indigo-400">{formatTime(timeLeft)}</div>
                     </div>
-                    <div className="w-full h-1.5 bg-brand-200 dark:bg-brand-900/50 rounded-full overflow-hidden">
+                    <div className="w-full h-1.5 bg-indigo-200 dark:bg-indigo-900/50 rounded-full overflow-hidden">
                         <div 
                             className="h-full bg-red-500 rounded-full animate-pulse" 
                             style={{ width: `${((totalDailySlots - remainingSlots) / totalDailySlots) * 100}%` }}
@@ -619,10 +562,9 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
             </div>
         </div>
 
-        {/* --- STEP 1: LEAD CAPTURE --- */}
         {step === 1 && (
              <div className="max-w-2xl mx-auto bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-white/10 rounded-3xl p-8 md:p-12 shadow-2xl relative overflow-hidden animate-fade-in-up">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-500 via-accent-purple to-brand-500"></div>
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600"></div>
                 
                 <h1 className="text-3xl md:text-4xl font-bold mb-4 text-slate-900 dark:text-white text-center">Create Your Account</h1>
                 <p className="text-slate-500 dark:text-gray-400 mb-10 text-center">Enter your details below to proceed to the secure checkout.</p>
@@ -631,8 +573,8 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
                     <div>
                         <label className="block text-sm font-bold text-slate-700 dark:text-gray-300 mb-2">Full Name</label>
                         <div className="relative group">
-                            <div className="absolute -inset-0.5 bg-gradient-to-r from-brand-500 via-accent-purple to-brand-500 rounded-xl opacity-0 group-focus-within:opacity-100 transition duration-500 blur-sm group-focus-within:animate-gradient-x"></div>
-                            <div className="absolute -inset-px bg-gradient-to-r from-brand-500 via-accent-purple to-brand-500 rounded-xl opacity-0 group-focus-within:opacity-100 transition duration-500" />
+                            <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 rounded-xl opacity-0 group-focus-within:opacity-100 transition duration-500 blur-sm"></div>
+                            <div className="absolute -inset-px bg-white dark:bg-[#0f172a] rounded-xl" />
                             <input 
                                 type="text" 
                                 placeholder="e.g. Alex Johnson"
@@ -643,9 +585,8 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
                                 onBlur={() => setNameBlurred(true)}
                             />
                         </div>
-                        {/* Name Micro-interaction - Now triggers on Blur */}
                         {formData.name.length > 2 && nameBlurred && (
-                            <div className="mt-2 flex items-center gap-2 text-xs text-brand-600 dark:text-brand-400 animate-in fade-in slide-in-from-top-1">
+                            <div className="mt-2 flex items-center gap-2 text-xs text-indigo-600 dark:text-indigo-400 animate-in fade-in slide-in-from-top-1">
                                 <UserCheck className="w-3 h-3" />
                                 <span>Nice to meet you, <span className="font-bold">{formData.name.split(' ')[0]}</span>!</span>
                             </div>
@@ -655,8 +596,8 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
                     <div>
                         <label className="block text-sm font-bold text-slate-700 dark:text-gray-300 mb-2">Email Address</label>
                         <div className="relative group">
-                            <div className="absolute -inset-0.5 bg-gradient-to-r from-brand-500 via-accent-purple to-brand-500 rounded-xl opacity-0 group-focus-within:opacity-100 transition duration-500 blur-sm group-focus-within:animate-gradient-x"></div>
-                            <div className="absolute -inset-px bg-gradient-to-r from-brand-500 via-accent-purple to-brand-500 rounded-xl opacity-0 group-focus-within:opacity-100 transition duration-500" />
+                            <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 rounded-xl opacity-0 group-focus-within:opacity-100 transition duration-500 blur-sm"></div>
+                            <div className="absolute -inset-px bg-white dark:bg-[#0f172a] rounded-xl" />
                             <input 
                                 type="email" 
                                 placeholder="alex@dealership.com"
@@ -666,7 +607,6 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
                                 onChange={(e) => setFormData({...formData, email: e.target.value})}
                             />
                         </div>
-                        {/* Email Micro-interaction */}
                         {isValidEmail(formData.email) ? (
                             <div className="mt-2 flex items-center gap-2 text-xs text-green-600 dark:text-green-400 animate-in fade-in slide-in-from-top-1">
                                 <ShieldCheck className="w-3 h-3" />
@@ -682,8 +622,8 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
                     <div>
                         <label className="block text-sm font-bold text-slate-700 dark:text-gray-300 mb-2">Autovit Listing URL</label>
                         <div className="relative group">
-                            <div className="absolute -inset-0.5 bg-gradient-to-r from-brand-500 via-accent-purple to-brand-500 rounded-xl opacity-0 group-focus-within:opacity-100 transition duration-500 blur-sm group-focus-within:animate-gradient-x"></div>
-                            <div className="absolute -inset-px bg-gradient-to-r from-brand-500 via-accent-purple to-brand-500 rounded-xl opacity-0 group-focus-within:opacity-100 transition duration-500" />
+                            <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 rounded-xl opacity-0 group-focus-within:opacity-100 transition duration-500 blur-sm"></div>
+                            <div className="absolute -inset-px bg-white dark:bg-[#0f172a] rounded-xl" />
                             <div className="relative z-10">
                                 <input 
                                     type="url" 
@@ -703,7 +643,6 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
                             </div>
                         </div>
                         
-                        {/* URL Error Message */}
                         {urlError && (
                             <div className="mt-2 flex items-center gap-2 text-xs text-red-500 animate-in fade-in slide-in-from-top-1 font-bold">
                                 <AlertCircle className="w-3 h-3" />
@@ -711,20 +650,19 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
                             </div>
                         )}
                         
-                        {/* URL SCANNING UI */}
                         {scanState === 'scanning' && !urlError && (
-                           <div className="mt-4 p-4 border border-brand-200 dark:border-brand-500/30 rounded-xl bg-brand-50 dark:bg-brand-900/10 animate-in fade-in slide-in-from-top-2">
+                           <div className="mt-4 p-4 border border-indigo-200 dark:border-indigo-500/30 rounded-xl bg-indigo-50 dark:bg-indigo-900/10 animate-in fade-in slide-in-from-top-2">
                               <div className="flex items-center gap-3 mb-3">
-                                 <Loader2 className="w-4 h-4 text-brand-600 dark:text-brand-400 animate-spin" />
-                                 <span className="text-sm font-bold text-brand-900 dark:text-brand-100">Analyzing Listing URL...</span>
+                                 <Loader2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400 animate-spin" />
+                                 <span className="text-sm font-bold text-indigo-900 dark:text-indigo-100">Analyzing Listing URL...</span>
                               </div>
                               <div className="space-y-2">
-                                 <div className="h-1.5 w-full bg-brand-200 dark:bg-brand-500/20 rounded-full overflow-hidden">
-                                     <div className="h-full bg-brand-500 w-2/3 animate-[shimmer_1s_infinite] relative">
+                                 <div className="h-1.5 w-full bg-indigo-200 dark:bg-indigo-500/20 rounded-full overflow-hidden">
+                                     <div className="h-full bg-indigo-500 w-2/3 animate-[shimmer_1s_infinite] relative">
                                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12"></div>
                                      </div>
                                  </div>
-                                 <div className="flex justify-between text-[10px] text-brand-600/70 dark:text-brand-400/70 font-mono">
+                                 <div className="flex justify-between text-[10px] text-indigo-600/70 dark:text-indigo-400/70 font-mono">
                                      <span>Connecting to platform...</span>
                                      <span>Fetching images...</span>
                                  </div>
@@ -732,10 +670,8 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
                            </div>
                         )}
 
-                        {/* SCAN COMPLETE UI - CONSOLIDATED SINGLE SECTION */}
                         {scanState === 'complete' && !urlError && (
-                            <div className="mt-4 rounded-xl border border-brand-500/30 overflow-hidden bg-brand-50/50 dark:bg-brand-900/10 shadow-lg animate-in fade-in slide-in-from-top-2 p-4 flex gap-4 items-center relative group">
-                                {/* Absolute Badge top right */}
+                            <div className="mt-4 rounded-xl border border-indigo-500/30 overflow-hidden bg-indigo-50/50 dark:bg-indigo-900/10 shadow-lg animate-in fade-in slide-in-from-top-2 p-4 flex gap-4 items-center relative group">
                                 <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-green-100 dark:bg-green-500/20 px-2 py-0.5 rounded text-[10px] font-bold text-green-700 dark:text-green-400 border border-green-200 dark:border-green-500/30">
                                     <CheckCircle2 className="w-3 h-3" />
                                     Verified Listing
@@ -770,7 +706,6 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
                         )}
                     </div>
 
-                    {/* AI Voice Preference Section */}
                     <div>
                         <label className="block text-sm font-bold text-slate-700 dark:text-gray-300 mb-3">AI Voice Preference</label>
                         <div className="grid grid-cols-2 gap-4">
@@ -779,19 +714,19 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
                                 onClick={() => setFormData({...formData, voiceGender: 'male'})}
                                 className={`relative group overflow-hidden p-4 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 ${
                                     formData.voiceGender === 'male' 
-                                    ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-white ring-2 ring-brand-500 shadow-[0_0_20px_rgba(14,165,233,0.3)]' 
-                                    : 'border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f172a] text-slate-500 dark:text-gray-400 hover:border-brand-300 dark:hover:border-white/30'
+                                    ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-white ring-2 ring-indigo-500 shadow-[0_0_20px_rgba(99,102,241,0.3)]' 
+                                    : 'border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f172a] text-slate-500 dark:text-gray-400 hover:border-indigo-300 dark:hover:border-white/30'
                                 }`}
                             >
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
-                                    formData.voiceGender === 'male' ? 'bg-brand-500 text-white' : 'bg-slate-100 dark:bg-white/5'
+                                    formData.voiceGender === 'male' ? 'bg-indigo-500 text-white' : 'bg-slate-100 dark:bg-white/5'
                                 }`}>
                                     <Mic className="w-5 h-5" />
                                 </div>
                                 <span className="font-bold text-sm">Male Voice</span>
                                 
                                 {formData.voiceGender === 'male' && (
-                                    <div className="absolute top-2 right-2 text-brand-500 animate-in zoom-in duration-300">
+                                    <div className="absolute top-2 right-2 text-indigo-500 animate-in zoom-in duration-300">
                                         <CheckCircle2 className="w-4 h-4 fill-current" />
                                     </div>
                                 )}
@@ -802,19 +737,19 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
                                 onClick={() => setFormData({...formData, voiceGender: 'female'})}
                                 className={`relative group overflow-hidden p-4 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 ${
                                     formData.voiceGender === 'female' 
-                                    ? 'border-accent-purple bg-purple-50 dark:bg-accent-purple/10 text-accent-purple dark:text-white ring-2 ring-accent-purple shadow-[0_0_20px_rgba(217,70,239,0.3)]' 
-                                    : 'border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f172a] text-slate-500 dark:text-gray-400 hover:border-accent-purple/50 dark:hover:border-white/30'
+                                    ? 'border-purple-500 bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-white ring-2 ring-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.3)]' 
+                                    : 'border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f172a] text-slate-500 dark:text-gray-400 hover:border-purple-500/50 dark:hover:border-white/30'
                                 }`}
                             >
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
-                                    formData.voiceGender === 'female' ? 'bg-accent-purple text-white' : 'bg-slate-100 dark:bg-white/5'
+                                    formData.voiceGender === 'female' ? 'bg-purple-500 text-white' : 'bg-slate-100 dark:bg-white/5'
                                 }`}>
                                     <Mic className="w-5 h-5" />
                                 </div>
                                 <span className="font-bold text-sm">Female Voice</span>
 
                                 {formData.voiceGender === 'female' && (
-                                    <div className="absolute top-2 right-2 text-accent-purple animate-in zoom-in duration-300">
+                                    <div className="absolute top-2 right-2 text-purple-500 animate-in zoom-in duration-300">
                                         <CheckCircle2 className="w-4 h-4 fill-current" />
                                     </div>
                                 )}
@@ -825,7 +760,7 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
                     <button 
                         type="submit"
                         disabled={isSubmitting}
-                        className="w-full py-5 rounded-xl text-xl font-bold text-white shadow-xl shadow-brand-500/20 transition-all duration-1000 ease-hypnotic hover:scale-[1.02] hover:shadow-[0_0_50px_-10px_rgba(14,165,233,0.5)] bg-gradient-to-r from-brand-600 via-accent-purple to-brand-600 bg-[length:200%_auto] animate-gradient-x flex items-center justify-center gap-2 mt-8 disabled:opacity-70"
+                        className="btn-primary w-full py-5 rounded-xl text-xl font-bold text-white shadow-xl shadow-brand-500/20 transition-all duration-1000 ease-hypnotic hover:scale-[1.02] hover:shadow-[0_0_50px_-10px_rgba(14,165,233,0.5)] bg-gradient-to-r from-brand-600 via-accent-purple to-brand-600 bg-[length:200%_auto] animate-gradient-x flex items-center justify-center gap-2 mt-8 disabled:opacity-70 disabled:cursor-not-allowed"
                     >
                         {isSubmitting ? (
                             <Loader2 className="w-6 h-6 animate-spin" />
@@ -840,14 +775,11 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
              </div>
         )}
 
-        {/* --- STEP 2: PAYMENT + OFFER STACK --- */}
         {step === 2 && (
              <div className="animate-fade-in grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10">
-                
-                {/* LEFT COLUMN: SECURE PAYMENT */}
                 <div className="order-2 lg:order-1">
                     <div className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-white/10 rounded-3xl p-8 md:p-12 shadow-2xl relative overflow-hidden">
-                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500 via-brand-500 to-green-500"></div>
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500 via-indigo-500 to-green-500"></div>
                         
                         <div className="text-center mb-8">
                             <div className="w-12 h-12 bg-slate-100 dark:bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -862,19 +794,17 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
                         </Elements>
                         
                         <div className="mt-8 text-center">
-                             <button onClick={() => setStep(1)} className="text-sm text-slate-500 hover:text-brand-500 transition-colors">
+                             <button onClick={() => setStep(1)} className="text-sm text-slate-500 hover:text-indigo-500 transition-colors">
                                 Change contact details
                              </button>
                         </div>
                     </div>
                 </div>
 
-                {/* RIGHT COLUMN: OFFER STACK */}
                 <div className="order-1 lg:order-2">
                     <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-3xl p-8 mb-8 shadow-lg dark:shadow-none sticky top-24">
                         <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6">What you're getting today:</h3>
                         
-                        {/* VISUAL OFFER STACK */}
                         <div className="space-y-4 mb-8">
                             <div className="flex justify-between items-center group">
                                 <div className="flex items-center gap-3">
@@ -934,14 +864,13 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
                             </div>
                              <div className="flex flex-col items-end mt-2">
                                 <div className="flex justify-between w-full items-center mb-1">
-                                    <span className="font-bold text-brand-600 dark:text-brand-400">Your Price Today</span>
+                                    <span className="font-bold text-indigo-600 dark:text-indigo-400">Your Price Today</span>
                                     <span className="text-2xl font-extrabold text-green-500 dark:text-green-400">$499</span>
                                 </div>
                                 <span className="text-[10px] font-bold text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded">One sale covers this 10x over</span>
                             </div>
                         </div>
 
-                        {/* Gold Guarantee Section */}
                         <div className="bg-yellow-50 dark:bg-yellow-900/10 rounded-xl p-4 border border-yellow-200 dark:border-yellow-500/30 flex gap-3">
                             <ShieldCheck className="w-5 h-5 text-yellow-600 dark:text-yellow-500 flex-shrink-0" />
                             <p className="text-xs text-yellow-800 dark:text-yellow-200/80 leading-relaxed">
@@ -949,7 +878,6 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
                             </p>
                         </div>
 
-                        {/* REVIEWS SECTION - MOVED INSIDE THE STICKY CONTAINER */}
                         <div className="border-t border-slate-200 dark:border-white/10 pt-8 mt-8 overflow-hidden relative">
                             <div className="flex items-center gap-2 mb-6">
                                 <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
@@ -960,7 +888,6 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
                                 <span className="text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Success Stories</span>
                             </div>
                             
-                            {/* Gradient Masks */}
                             <div className="absolute left-0 top-20 bottom-0 w-8 bg-gradient-to-r from-slate-50 dark:from-[#0f172a] to-transparent z-10 pointer-events-none" />
                             <div className="absolute right-0 top-20 bottom-0 w-8 bg-gradient-to-l from-slate-50 dark:from-[#0f172a] to-transparent z-10 pointer-events-none" />
 
@@ -972,12 +899,12 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
                                                 <Star key={star} className="w-2.5 h-2.5 text-yellow-500 fill-yellow-500" />
                                             ))}
                                         </div>
-                                        <div className="mb-3 text-brand-200 dark:text-brand-500/30">
+                                        <div className="mb-3 text-indigo-200 dark:text-indigo-500/30">
                                             <Quote size={20} fill="currentColor" />
                                         </div>
                                         <p className="text-slate-700 dark:text-gray-300 text-xs mb-4 relative z-10 leading-relaxed font-light">"{review.content}"</p>
                                         <div className="flex items-center gap-3 border-t border-slate-100 dark:border-white/5 pt-3">
-                                            <div className="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-500/20 flex items-center justify-center text-[10px] font-bold text-brand-700 dark:text-brand-300 border border-slate-200 dark:border-white/10">
+                                            <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center text-[10px] font-bold text-indigo-700 dark:text-indigo-300 border border-slate-200 dark:border-white/10">
                                                 {review.initials}
                                             </div>
                                             <div>
