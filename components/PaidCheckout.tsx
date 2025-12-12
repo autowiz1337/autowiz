@@ -346,7 +346,7 @@ const PaymentForm: React.FC<{ onSuccess: () => void; formData: FormDataType }> =
         <button
             type="submit"
             disabled={!stripe || processing}
-            className="btn-primary w-full py-5 rounded-xl text-xl font-bold text-white shadow-xl shadow-indigo-500/20 transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+            className="btn-primary w-full py-5 rounded-xl text-xl font-bold shadow-xl transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
         >
             {processing ? (
             <Loader2 className="w-6 h-6 animate-spin" />
@@ -760,7 +760,7 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
                     <button 
                         type="submit"
                         disabled={isSubmitting}
-                        className="btn-primary w-full py-5 rounded-xl text-xl font-bold shadow-xl shadow-indigo-500/20 transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-2 mt-8 disabled:opacity-70"
+                        className="btn-primary w-full py-5 rounded-xl text-xl font-bold text-white shadow-xl transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-2 mt-8 disabled:opacity-70"
                     >
                         {isSubmitting ? (
                             <Loader2 className="w-6 h-6 animate-spin" />

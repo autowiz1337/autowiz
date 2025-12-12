@@ -40,10 +40,10 @@ const GuaranteeSection: React.FC<GuaranteeSectionProps> = ({ onNavigate }) => {
             <div className="mt-10 text-center">
                 <button 
                     onClick={() => onNavigate?.('checkout')}
-                    className="group relative w-full sm:w-auto rounded-full px-12 py-5 text-xl font-bold text-white shadow-lg shadow-brand-500/30 overflow-hidden transition-all duration-1000 ease-hypnotic hover:scale-105 hover:shadow-[0_0_70px_-10px_rgba(217,70,239,0.6)] bg-gradient-to-r from-brand-500 via-accent-purple to-brand-500 bg-[length:200%_auto] animate-gradient-x flex items-center justify-center gap-2 mx-auto mb-6"
+                    className="btn-primary group relative w-full sm:w-auto rounded-full px-12 py-5 text-xl font-bold text-white shadow-lg overflow-hidden transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2 mx-auto mb-6"
                 >
                     Claim My Risk-Free Pilot
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-500 ease-hypnotic" />
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
                 </button>
                 <div className="flex items-center justify-center gap-3 opacity-80">
                     <Award className="w-6 h-6 text-yellow-600 dark:text-yellow-500" />

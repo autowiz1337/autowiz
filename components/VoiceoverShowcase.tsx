@@ -211,10 +211,10 @@ const VoiceoverShowcase: React.FC<VoiceoverShowcaseProps> = ({ onNavigate }) => 
             <div className="mt-10">
                 <button 
                     onClick={() => onNavigate?.('checkout')}
-                    className="group relative rounded-full px-8 py-4 text-lg font-bold text-white shadow-lg shadow-brand-500/30 overflow-hidden transition-all duration-1000 ease-hypnotic hover:scale-105 hover:shadow-[0_0_60px_-5px_rgba(217,70,239,0.6)] bg-gradient-to-r from-brand-600 via-accent-purple to-brand-600 bg-[length:200%_auto] animate-gradient-x flex items-center gap-2"
+                    className="btn-primary group relative rounded-full px-8 py-4 text-lg font-bold text-white shadow-lg overflow-hidden transition-all duration-300 hover:scale-105 flex items-center gap-2"
                 >
                     Generate Sales Voiceovers
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-500 ease-hypnotic" />
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
                 </button>
                 <div className="mt-4 flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-gray-400">
                     <BarChart3 className="w-4 h-4 text-green-500" />

@@ -32,7 +32,7 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
               <button 
                 onClick={() => onNavigate?.('checkout')}
-                className="btn-primary group relative w-full sm:w-auto rounded-full px-10 py-5 text-xl font-bold overflow-hidden transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2 backdrop-blur-3xl shadow-lg shadow-indigo-500/30"
+                className="btn-primary group relative w-full sm:w-auto rounded-full px-10 py-5 text-xl font-bold overflow-hidden transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2 backdrop-blur-3xl shadow-lg"
               >
                 Paste Your URL
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />

@@ -108,24 +108,28 @@
       }
     </script>
     <style>
-      /* CRITICAL: Hardcoded styles to prevent transparency issues */
+      /* CRITICAL: Hardcoded styles for reliability */
+      
+      /* Solid Amazon-Style Orange Button */
       .btn-primary {
-        background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%);
-        color: white;
-        border: none;
-      }
-      .btn-primary:hover {
-        background: linear-gradient(135deg, #4338ca 0%, #7e22ce 100%);
-        box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.4);
+        background-color: #f97316 !important; /* Tailwind Orange-500 */
+        background-image: none !important;
+        color: white !important;
+        border: 1px solid #ea580c;
       }
       
+      .btn-primary:hover {
+        background-color: #ea580c !important; /* Tailwind Orange-600 */
+        box-shadow: 0 0 20px rgba(249, 115, 22, 0.4);
+        transform: translateY(-1px);
+      }
+      
+      /* Solid High-Vis Text (Replaces Gradient Text) */
       .text-gradient-primary {
-        background: linear-gradient(to right, #6366f1, #d946ef, #6366f1);
-        -webkit-background-clip: text;
-        background-clip: text;
-        color: transparent;
-        background-size: 200% auto;
-        animation: gradient-x 4s linear infinite;
+        color: #f97316 !important; /* Tailwind Orange-500 */
+        background: none !important;
+        -webkit-text-fill-color: initial !important;
+        text-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
       }
 
       /* Base Utilities */

@@ -115,7 +115,7 @@ const LiveDemo: React.FC = () => {
                     <button 
                         onClick={handleGenerate}
                         disabled={loading}
-                        className="w-full py-4 rounded-lg font-bold text-white flex items-center justify-center gap-2 transition-all duration-500 ease-hypnotic hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(14,165,233,0.5)] bg-gradient-to-r from-brand-600 via-accent-purple to-brand-600 bg-[length:200%_auto] animate-gradient-x mt-4"
+                        className="btn-primary w-full py-4 rounded-lg font-bold text-white flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] mt-4"
                     >
                         {loading ? (
                             <Loader2 className="w-5 h-5 animate-spin" />

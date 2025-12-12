@@ -101,10 +101,10 @@ const ReclaimBudgetCTA: React.FC<ReclaimBudgetCTAProps> = ({ onNavigate }) => {
                 <div className="flex flex-col items-center relative z-10">
                     <button 
                         onClick={() => onNavigate?.('checkout')}
-                        className="group relative w-full sm:w-auto rounded-full px-12 py-5 text-xl font-bold text-white shadow-lg shadow-brand-500/30 overflow-hidden transition-all duration-1000 ease-hypnotic hover:scale-105 hover:shadow-[0_0_70px_-10px_rgba(56,189,248,0.6)] bg-gradient-to-r from-brand-500 via-accent-purple to-brand-500 bg-[length:200%_auto] animate-gradient-x flex items-center justify-center gap-2"
+                        className="btn-primary group relative w-full sm:w-auto rounded-full px-12 py-5 text-xl font-bold text-white shadow-lg overflow-hidden transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2"
                     >
                           Stop Wasting Budget
-                          <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-500 ease-hypnotic" />
+                          <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
                     </button>
                     
                     <div className="mt-6 flex flex-col sm:flex-row items-center gap-4 sm:gap-8 text-sm font-medium text-blue-200/60">
