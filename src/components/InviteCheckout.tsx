@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { CheckCircle2, Lock, ArrowRight, ShieldCheck, Zap, Loader2, AlertCircle, UserCheck, Database, Image, MapPin, Mic, Info, Home } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';

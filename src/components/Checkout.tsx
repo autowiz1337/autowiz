@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { CheckCircle2, Lock, ArrowRight, AlertCircle, ShieldCheck, Clock, Star, Quote, Loader2, Home } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
