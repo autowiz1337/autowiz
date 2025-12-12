@@ -6,22 +6,20 @@ import {
   Gauge, Copy, Lock, Share2, AlignLeft, Search, ShieldCheck, ScanEye, Pencil, Youtube,
   AlertTriangle, RefreshCw, Home
 } from 'lucide-react';
-import { toast } from 'react-hot-toast';
-import { useSearchParams } from 'react-router-dom';
 import { BackendReport, DashboardData } from '../types/Report';
 import { mapBackendReportToDashboard } from '../utils/reportMapper';
 import SEO from './SEO';
 
 // --- CONFIGURATION ---
-// We now use a relative proxy path to avoid CORS. The worker handles the upstream fetch.
-const PROXY_ENDPOINT = '/api/proxy-r2'; 
+// Replace this with your actual R2 Public Bucket URL or Worker URL
+const R2_BASE_URL = 'https://pub-43d994e414f04400938f65714774302c.r2.dev'; 
 
 const POSTING_SITES = [
-    { name: 'Autovit.ro', url: 'https://www.autovit.ro', color: 'bg-orange-600 hover:bg-orange-700' },    
-    { name: 'Carzz.ro', url: 'https://carzz.ro', color: 'bg-red-600 hover:bg-red-700' },
-    { name: 'BestAuto', url: 'https://www.bestauto.ro', color: 'bg-blue-600 hover:bg-blue-700' },
-    { name: 'Plus-Auto', url: 'https://plus-auto.ro', color: 'bg-green-600 hover:bg-green-700' },
-    { name: 'olx.ro', url: 'https://olx.ro', color: 'bg-teal-800 hover:bg-teal-900' },
+    { name: 'Autovit.ro', url: 'https://www.autovit.ro' },    
+    { name: 'Carzz.ro', url: 'https://carzz.ro' },
+    { name: 'BestAuto', url: 'https://www.bestauto.ro' },
+    { name: 'Plus-Auto', url: 'https://plus-auto.ro' },
+    { name: 'olx.ro', url: 'https://olx.ro' },
 ];
 
 const NOTIFICATIONS = [
@@ -39,29 +37,29 @@ const Dashboard: React.FC = () => {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [activeNotification, setActiveNotification] = useState<typeof NOTIFICATIONS[0] | null>(null);
   
-  // Router Params
-  const [searchParams] = useSearchParams();
-  
   // Data State
   const [reportData, setReportData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Editable State with Persistance Key
+  // Editable State
   const [editableDescription, setEditableDescription] = useState("");
   const [editableTitle, setEditableTitle] = useState("");
-  const [storageKey, setStorageKey] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchReport = async () => {
         setIsLoading(true);
         setError(null);
 
-        const reportId = searchParams.get('id');
+        // 1. Get ID from URL
+        const params = new URLSearchParams(window.location.search);
+        const reportId = params.get('id');
 
+        // MOCK FALLBACK for Demo purposes if no ID is present
         if (!reportId) {
              // Simulate loading mock data for demo experience
              setTimeout(() => {
+                 // Using the structure from your provided JSON sample
                  const mockRaw: BackendReport = {
                     "Id": 2,
                     "CreatedAt": "2025-12-11 08:41:57+00:00",
@@ -78,64 +76,43 @@ const Dashboard: React.FC = () => {
                  };
                  const mapped = mapBackendReportToDashboard(mockRaw);
                  setReportData(mapped);
-                 
-                 // Initial Data Load
                  setEditableTitle(mapped.title);
                  setEditableDescription(mapped.description);
-                 setStorageKey(`velocity_draft_${mapped.id}`);
-                 
                  setIsLoading(false);
              }, 1000);
              return;
         }
 
         try {
-            // Use the local proxy to avoid CORS issues
-            // This works by sending the ID to the worker, which fetches from R2 server-side
-            const url = `${PROXY_ENDPOINT}?id=${encodeURIComponent(reportId)}`;
+            // 2. Fetch from R2
+            // If the ID is a full URL, use it. Otherwise construct R2 URL.
+            const url = reportId.startsWith('http') ? reportId : `${R2_BASE_URL}/${reportId}`;
             
             const response = await fetch(url);
-            
-            if (!response.ok) {
-                // Try to read error message if available
-                const errText = await response.text().catch(() => 'Unknown error');
-                throw new Error(`Failed to load report data: ${response.status} ${errText}`);
-            }
+            if (!response.ok) throw new Error("Failed to load report data.");
             
             const rawData: BackendReport = await response.json();
             const mapped = mapBackendReportToDashboard(rawData);
             
             setReportData(mapped);
-            setStorageKey(`velocity_draft_${mapped.id}`);
-            
-            // Check LocalStorage for drafts first
-            const savedDraft = localStorage.getItem(`velocity_draft_${mapped.id}`);
-            if (savedDraft) {
-                const parsed = JSON.parse(savedDraft);
-                setEditableTitle(parsed.title || mapped.title);
-                setEditableDescription(parsed.description || mapped.description);
-                toast.success("Loaded saved draft");
-            } else {
-                setEditableTitle(mapped.title);
-                setEditableDescription(mapped.description);
-            }
-
+            setEditableTitle(mapped.title);
+            setEditableDescription(mapped.description);
         } catch (err) {
             console.error(err);
-            setError(err instanceof Error ? err.message : "Could not load the dashboard report. Please check the ID.");
+            setError("Could not load the dashboard report. Please check the ID.");
         } finally {
             setIsLoading(false);
         }
     };
 
     fetchReport();
-  }, [searchParams]);
+  }, []);
 
   // Notification Stream Logic
   useEffect(() => {
     const showNotification = (index: number) => {
       setActiveNotification(NOTIFICATIONS[index]);
-      setTimeout(() => setActiveNotification(null), 5000); 
+      setTimeout(() => setActiveNotification(null), 5000); // Hide after 5s
     };
 
     const t1 = setTimeout(() => showNotification(0), 4000);
@@ -152,28 +129,17 @@ const Dashboard: React.FC = () => {
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
     setCopiedField(field);
-    toast.success("Copied to clipboard!");
     setTimeout(() => setCopiedField(null), 2000);
   };
 
   const handleSave = () => {
     setIsSaving(true);
-    
-    // Save to LocalStorage
-    if (storageKey) {
-        localStorage.setItem(storageKey, JSON.stringify({
-            title: editableTitle,
-            description: editableDescription,
-            timestamp: Date.now()
-        }));
-    }
-
+    // Mock save delay
     setTimeout(() => {
         setIsSaving(false);
         setSaveSuccess(true);
-        toast.success("Draft saved successfully");
         setTimeout(() => setSaveSuccess(false), 3000);
-    }, 800);
+    }, 1000);
   };
 
   if (isLoading) {
@@ -287,7 +253,7 @@ const Dashboard: React.FC = () => {
             {/* NEW OPTIMIZE BUTTON */}
             <div className="mt-6">
                <button 
-                  onClick={() => window.open('/checkout', '_blank')}
+                  onClick={() => window.open('?page=checkout', '_blank')}
                   className="btn-primary w-full relative rounded-xl px-4 py-3 text-sm font-bold text-white shadow-lg overflow-hidden transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-2 whitespace-nowrap"
                >
                   <Sparkles className="w-4 h-4" />
@@ -385,7 +351,7 @@ const Dashboard: React.FC = () => {
                         <button
                             key={site.name}
                             onClick={() => window.open(site.url, '_blank')}
-                            className={`group relative overflow-hidden rounded-xl px-6 py-2.5 text-sm font-bold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl ${site.color}`}
+                            className="group relative overflow-hidden rounded-xl px-6 py-2.5 text-sm font-bold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-600 bg-[length:200%_auto] animate-gradient-x"
                         >
                             <div className="relative z-10 flex items-center gap-2">
                                {site.name}
@@ -497,7 +463,7 @@ const Dashboard: React.FC = () => {
                            {/* Video Actions */}
                            <div className="flex flex-col md:flex-row items-center justify-center gap-4 mt-6">
                                <button 
-                                   onClick={() => copyToClipboard(`https://www.youtube.com/watch?v=${reportData.youtubeId}`, 'youtube')}
+                                   onClick={() => copyToClipboard(`https://youtu.be/${reportData.youtubeId}`, 'youtube')}
                                    className={`px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 shadow-lg transition-all ${
                                        copiedField === 'youtube' ? 'bg-green-600 text-white' : 'bg-red-600 hover:bg-red-500 text-white'
                                    }`}
@@ -509,7 +475,7 @@ const Dashboard: React.FC = () => {
                                {reportData.videoDownloadUrl && (
                                    <button 
                                        onClick={() => window.open(reportData.videoDownloadUrl, '_blank')}
-                                       className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg"
+                                       className="px-6 py-3 bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-900 dark:text-white rounded-xl font-bold text-sm flex items-center gap-2 transition-all"
                                    >
                                        <Download className="w-4 h-4" /> Download Raw MP4
                                    </button>
