@@ -168,6 +168,7 @@ const ComparisonTable: React.FC<ComparisonTableProps> = ({ onNavigate }) => {
                 30-Day Money-Back Guarantee • Cancel Anytime
             </p>
         </div>
+      </div>
     </section>
   );
 };
