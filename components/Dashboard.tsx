@@ -50,7 +50,7 @@ const Dashboard: React.FC = () => {
         setIsLoading(true);
         setError(null);
 
-        // 1. Get ID from URL
+        // 1. Get ID from URL 
         const params = new URLSearchParams(window.location.search);
         const reportId = params.get('id');
 
