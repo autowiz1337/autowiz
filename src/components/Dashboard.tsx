@@ -17,11 +17,11 @@ import SEO from './SEO';
 const PROXY_ENDPOINT = '/api/proxy-r2'; 
 
 const POSTING_SITES = [
-    { name: 'Autovit.ro', url: 'https://www.autovit.ro' },    
-    { name: 'Carzz.ro', url: 'https://carzz.ro' },
-    { name: 'BestAuto', url: 'https://www.bestauto.ro' },
-    { name: 'Plus-Auto', url: 'https://plus-auto.ro' },
-    { name: 'olx.ro', url: 'https://olx.ro' },
+    { name: 'Autovit.ro', url: 'https://www.autovit.ro', color: 'bg-orange-600 hover:bg-orange-700' },    
+    { name: 'Carzz.ro', url: 'https://carzz.ro', color: 'bg-red-600 hover:bg-red-700' },
+    { name: 'BestAuto', url: 'https://www.bestauto.ro', color: 'bg-blue-600 hover:bg-blue-700' },
+    { name: 'Plus-Auto', url: 'https://plus-auto.ro', color: 'bg-green-600 hover:bg-green-700' },
+    { name: 'olx.ro', url: 'https://olx.ro', color: 'bg-teal-800 hover:bg-teal-900' },
 ];
 
 const NOTIFICATIONS = [
@@ -385,7 +385,7 @@ const Dashboard: React.FC = () => {
                         <button
                             key={site.name}
                             onClick={() => window.open(site.url, '_blank')}
-                            className="group relative overflow-hidden rounded-xl px-6 py-2.5 text-sm font-bold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-600 bg-[length:200%_auto] animate-gradient-x"
+                            className={`group relative overflow-hidden rounded-xl px-6 py-2.5 text-sm font-bold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl ${site.color}`}
                         >
                             <div className="relative z-10 flex items-center gap-2">
                                {site.name}
@@ -509,7 +509,7 @@ const Dashboard: React.FC = () => {
                                {reportData.videoDownloadUrl && (
                                    <button 
                                        onClick={() => window.open(reportData.videoDownloadUrl, '_blank')}
-                                       className="px-6 py-3 bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-900 dark:text-white rounded-xl font-bold text-sm flex items-center gap-2 transition-all"
+                                       className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg"
                                    >
                                        <Download className="w-4 h-4" /> Download Raw MP4
                                    </button>
