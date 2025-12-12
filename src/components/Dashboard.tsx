@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, Target, ImageIcon, FileText, Save, Loader2, Check, ExternalLink, 
@@ -12,7 +13,8 @@ import { mapBackendReportToDashboard } from '../utils/reportMapper';
 import SEO from './SEO';
 
 // --- CONFIGURATION ---
-const R2_BASE_URL = 'https://pub-ce9ab66f3fc6436f92644d16b5892006.r2.dev'; 
+// We now use a relative proxy path to avoid CORS. The worker handles the upstream fetch.
+const PROXY_ENDPOINT = '/api/proxy-r2'; 
 
 const POSTING_SITES = [
     { name: 'Autovit.ro', url: 'https://www.autovit.ro' },    
@@ -88,9 +90,17 @@ const Dashboard: React.FC = () => {
         }
 
         try {
-            const url = reportId.startsWith('http') ? reportId : `${R2_BASE_URL}/${reportId}`;
+            // Use the local proxy to avoid CORS issues
+            // This works by sending the ID to the worker, which fetches from R2 server-side
+            const url = `${PROXY_ENDPOINT}?id=${encodeURIComponent(reportId)}`;
+            
             const response = await fetch(url);
-            if (!response.ok) throw new Error("Failed to load report data.");
+            
+            if (!response.ok) {
+                // Try to read error message if available
+                const errText = await response.text().catch(() => 'Unknown error');
+                throw new Error(`Failed to load report data: ${response.status} ${errText}`);
+            }
             
             const rawData: BackendReport = await response.json();
             const mapped = mapBackendReportToDashboard(rawData);
@@ -112,7 +122,7 @@ const Dashboard: React.FC = () => {
 
         } catch (err) {
             console.error(err);
-            setError("Could not load the dashboard report. Please check the ID.");
+            setError(err instanceof Error ? err.message : "Could not load the dashboard report. Please check the ID.");
         } finally {
             setIsLoading(false);
         }
