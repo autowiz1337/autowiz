@@ -70,9 +70,40 @@
     *   *Why?* CDN blocks the render (FOUC) and downloads the entire CSS library. Build step purges unused CSS for faster load times.
 *   **Action:** Add an `ErrorBoundary` component to catch React crashes gracefully (e.g., if Stripe fails to load).
 
-## 6. Execution Order for Next Coding Session
-1.  **Install Router**: `npm install react-router-dom`
-2.  **Refactor App.tsx**: Implement Routes.
-3.  **Add Redirects**: Create `public/_redirects`.
-4.  **Add Toast**: Replace alerts with Toasts.
-5.  **Dashboard Persistence**: Add LocalStorage logic.
+---
+
+## 6. 🐙 Phase 8: GitHub Pages Adaptation
+**Goal:** Ensure the app runs flawlessly on GitHub Pages' static hosting environment without losing SPA functionality.
+
+### 8.1 Routing Strategy Update
+*   **Problem:** GitHub Pages is a static host. It does not natively support HTML5 `pushState` routing (e.g., `/dashboard`), which causes 404 errors on page refresh.
+*   **Solution:** Switch from `BrowserRouter` to `HashRouter`.
+    *   **Change:** `<Router>` -> `<HashRouter>` in `src/App.tsx`.
+    *   **Result:** URLs will look like `https://username.github.io/repo/#/dashboard`. This ensures the server always serves `index.html` while React handles the route via the hash fragment.
+
+### 8.2 Asset Path Configuration
+*   **Problem:** Absolute paths (e.g., `/assets/script.js`) fail if the app is hosted in a subdirectory (e.g., `github.io/velocity-ai/`).
+*   **Solution:** Ensure `vite.config.ts` sets the base path correctly.
+    *   **Action:** Set `base: './'` or `base: '/<repo-name>/'` to ensure assets load relatively.
+
+### 8.3 Deployment Workflow
+*   **Action:** Add a `gh-pages` deployment script to `package.json` if manual deployment is needed, or configure a GitHub Action to build and deploy the `dist` folder to the `gh-pages` branch.
+
+---
+
+## 7. 🚨 Phase 9: Deployment Repair (Netlify Node Version)
+**Goal:** Fix build failure `exit code: 2` caused by Netlify defaulting to Node v22.
+
+### 9.1 Enforce Node LTS
+*   **Diagnosis:** Netlify uses Node v22 by default. Current build chain (Vite/Rollup) may have instability with bleeding-edge Node versions.
+*   **Solution:** Lock environment to Node v20 (LTS).
+*   **Action 1:** Create `.nvmrc` file containing `20`.
+*   **Action 2:** Update `package.json` with `engines` field: `"node": ">=18"`.
+
+---
+
+## 8. Execution Order for Next Coding Session
+1.  **Add .nvmrc**: Fix Netlify build.
+2.  **Install Router**: `npm install react-router-dom`
+3.  **Refactor App.tsx**: Implement Routes.
+4.  **Add Redirects**: Create `public/_redirects`.
