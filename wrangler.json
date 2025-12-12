@@ -1,0 +1,9 @@
+{
+  "name": "velocity-ai",
+  "main": "functions/spa_worker.js",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS"
+  },
+  "compatibility_date": "2024-09-23"
+}
