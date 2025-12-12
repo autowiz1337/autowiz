@@ -10,7 +10,7 @@ const Stats: React.FC<StatsProps> = ({ onNavigate }) => {
   return (
     <section className="py-24 bg-slate-50 dark:bg-[#020617] relative overflow-hidden">
       {/* Background Decoration */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-brand-500/5 dark:bg-brand-900/10 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-indigo-500/5 dark:bg-indigo-900/10 blur-[120px] rounded-full pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         
@@ -23,12 +23,12 @@ const Stats: React.FC<StatsProps> = ({ onNavigate }) => {
 
            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
               {/* Connector Line (Desktop only) */}
-              <div className="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-slate-300 dark:via-brand-500/20 to-transparent -translate-y-1/2 z-0" />
+              <div className="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-slate-300 dark:via-indigo-500/20 to-transparent -translate-y-1/2 z-0" />
 
               {/* Step 1 */}
-              <div className="relative z-10 bg-white dark:bg-[#0f172a] p-8 rounded-2xl border border-slate-200 dark:border-white/10 text-center group hover:border-brand-500/50 transition-all duration-700 ease-hypnotic hover:-translate-y-2 shadow-xl dark:shadow-xl">
-                  <div className="w-16 h-16 mx-auto bg-slate-50 dark:bg-brand-950 rounded-full flex items-center justify-center border-2 border-brand-500/30 mb-6 group-hover:scale-110 transition-transform duration-700 ease-hypnotic shadow-[0_0_20px_rgba(14,165,233,0.2)]">
-                    <Link className="w-7 h-7 text-brand-500 dark:text-brand-400" />
+              <div className="relative z-10 bg-white dark:bg-[#0f172a] p-8 rounded-2xl border border-slate-200 dark:border-white/10 text-center group hover:border-indigo-500/50 transition-all duration-300 hover:-translate-y-2 shadow-xl dark:shadow-xl">
+                  <div className="w-16 h-16 mx-auto bg-slate-50 dark:bg-indigo-950 rounded-full flex items-center justify-center border-2 border-indigo-500/30 mb-6 group-hover:scale-110 transition-transform duration-300 shadow-[0_0_20px_rgba(14,165,233,0.2)]">
+                    <Link className="w-7 h-7 text-indigo-500 dark:text-indigo-400" />
                   </div>
                   <div className="absolute top-6 right-6 text-5xl font-bold text-slate-100 dark:text-white/5 select-none">01</div>
                   <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">Submit URL</h3>
@@ -38,9 +38,9 @@ const Stats: React.FC<StatsProps> = ({ onNavigate }) => {
               </div>
 
               {/* Step 2 */}
-              <div className="relative z-10 bg-white dark:bg-[#0f172a] p-8 rounded-2xl border border-slate-200 dark:border-white/10 text-center group hover:border-accent-purple/50 transition-all duration-700 ease-hypnotic hover:-translate-y-2 shadow-xl dark:shadow-xl">
-                  <div className="w-16 h-16 mx-auto bg-slate-50 dark:bg-brand-950 rounded-full flex items-center justify-center border-2 border-accent-purple/30 mb-6 group-hover:scale-110 transition-transform duration-700 ease-hypnotic shadow-[0_0_20px_rgba(217,70,239,0.2)]">
-                    <Sparkles className="w-7 h-7 text-accent-purple" />
+              <div className="relative z-10 bg-white dark:bg-[#0f172a] p-8 rounded-2xl border border-slate-200 dark:border-white/10 text-center group hover:border-purple-500/50 transition-all duration-300 hover:-translate-y-2 shadow-xl dark:shadow-xl">
+                  <div className="w-16 h-16 mx-auto bg-slate-50 dark:bg-indigo-950 rounded-full flex items-center justify-center border-2 border-purple-500/30 mb-6 group-hover:scale-110 transition-transform duration-300 shadow-[0_0_20px_rgba(217,70,239,0.2)]">
+                    <Sparkles className="w-7 h-7 text-purple-500" />
                   </div>
                   <div className="absolute top-6 right-6 text-5xl font-bold text-slate-100 dark:text-white/5 select-none">02</div>
                   <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">We Optimize</h3>
@@ -50,8 +50,8 @@ const Stats: React.FC<StatsProps> = ({ onNavigate }) => {
               </div>
 
               {/* Step 3 */}
-              <div className="relative z-10 bg-white dark:bg-[#0f172a] p-8 rounded-2xl border border-slate-200 dark:border-white/10 text-center group hover:border-green-500/50 transition-all duration-700 ease-hypnotic hover:-translate-y-2 shadow-xl dark:shadow-xl">
-                  <div className="w-16 h-16 mx-auto bg-slate-50 dark:bg-brand-950 rounded-full flex items-center justify-center border-2 border-green-500/30 mb-6 group-hover:scale-110 transition-transform duration-700 ease-hypnotic shadow-[0_0_20px_rgba(34,197,94,0.2)]">
+              <div className="relative z-10 bg-white dark:bg-[#0f172a] p-8 rounded-2xl border border-slate-200 dark:border-white/10 text-center group hover:border-green-500/50 transition-all duration-300 hover:-translate-y-2 shadow-xl dark:shadow-xl">
+                  <div className="w-16 h-16 mx-auto bg-slate-50 dark:bg-indigo-950 rounded-full flex items-center justify-center border-2 border-green-500/30 mb-6 group-hover:scale-110 transition-transform duration-300 shadow-[0_0_20px_rgba(34,197,94,0.2)]">
                     <DollarSign className="w-7 h-7 text-green-500" />
                   </div>
                   <div className="absolute top-6 right-6 text-5xl font-bold text-slate-100 dark:text-white/5 select-none">03</div>
@@ -67,10 +67,10 @@ const Stats: React.FC<StatsProps> = ({ onNavigate }) => {
         <div className="flex flex-col items-center mb-32">
             <button 
                 onClick={() => onNavigate?.('checkout')}
-                className="group relative w-full sm:w-auto rounded-full px-12 py-5 text-xl font-bold text-white shadow-lg shadow-brand-500/30 overflow-hidden transition-all duration-1000 ease-hypnotic hover:scale-105 hover:shadow-[0_0_70px_-10px_rgba(217,70,239,0.6)] bg-gradient-to-r from-brand-500 via-accent-purple to-brand-500 bg-[length:200%_auto] animate-gradient-x flex items-center justify-center gap-2"
+                className="group relative w-full sm:w-auto rounded-full px-12 py-5 text-xl font-bold text-white shadow-lg shadow-indigo-500/30 overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-indigo-500/50 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 flex items-center justify-center gap-2"
             >
                 Get Started Now
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-500 ease-hypnotic" />
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
             </button>
             <div className="mt-4 flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-gray-500 uppercase tracking-wide">
                 <ShieldCheck className="w-4 h-4 text-green-500" />
@@ -84,7 +84,6 @@ const Stats: React.FC<StatsProps> = ({ onNavigate }) => {
         </div>
         
         <div className="flex flex-wrap justify-center gap-12 md:gap-20 opacity-40 grayscale mb-8 text-slate-800 dark:text-white">
-           {/* Simple Typographic Logos for Demo */}
            <span className="text-2xl font-serif font-bold hover:opacity-100 transition-opacity cursor-default">CARVANA</span>
            <span className="text-2xl font-sans font-black tracking-tighter italic hover:opacity-100 transition-opacity cursor-default">AUTONATION</span>
            <span className="text-2xl font-mono font-bold hover:opacity-100 transition-opacity cursor-default">VROOM</span>

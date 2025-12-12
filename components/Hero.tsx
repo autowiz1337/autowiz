@@ -10,18 +10,18 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
   return (
     <div className="relative pt-32 pb-20 overflow-hidden">
       {/* Background Elements */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-brand-600/10 dark:bg-brand-600/20 blur-[120px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-[800px] h-[600px] bg-accent-purple/5 dark:bg-accent-purple/10 blur-[100px] rounded-full pointer-events-none" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-indigo-600/10 dark:bg-indigo-600/20 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-[800px] h-[600px] bg-purple-500/5 dark:bg-purple-500/10 blur-[100px] rounded-full pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-6 relative z-10 text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs font-medium text-brand-600 dark:text-brand-300 mb-8 animate-fade-in shadow-sm dark:shadow-none">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs font-medium text-indigo-600 dark:text-indigo-300 mb-8 animate-fade-in shadow-sm dark:shadow-none">
           <Sparkles className="w-3 h-3" />
           <span>Now with Gemini 2.5 Flash Integration</span>
         </div>
 
         <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-[1.1] text-slate-900 dark:text-white">
           The only AI that drives <br className="hidden md:block" />
-          <span className="text-gradient">inventory turnover</span>
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500">inventory turnover</span>
         </h1>
 
         <p className="text-lg md:text-xl text-slate-600 dark:text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
@@ -32,13 +32,13 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
               <button 
                 onClick={() => onNavigate?.('checkout')}
-                className="group relative w-full sm:w-auto rounded-full px-10 py-5 text-xl font-bold text-white shadow-lg shadow-brand-500/30 overflow-hidden transition-all duration-1000 ease-hypnotic hover:scale-105 hover:shadow-[0_0_60px_-5px_rgba(217,70,239,0.6)] bg-gradient-to-r from-brand-500 via-accent-purple to-brand-500 bg-[length:200%_auto] animate-gradient-x flex items-center justify-center gap-2 backdrop-blur-3xl"
+                className="group relative w-full sm:w-auto rounded-full px-10 py-5 text-xl font-bold text-white shadow-lg shadow-indigo-500/30 overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-indigo-500/50 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 flex items-center justify-center gap-2 backdrop-blur-3xl"
               >
                 Paste Your URL
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-500 ease-hypnotic" />
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
               </button>
 
-              <button className="w-full sm:w-auto px-8 py-4 bg-white/80 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-full text-slate-700 dark:text-white font-medium text-lg transition-all duration-1000 ease-hypnotic hover:bg-white dark:hover:bg-white/10 hover:scale-105 hover:shadow-[0_0_30px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.15)] flex items-center justify-center gap-2 backdrop-blur-sm shadow-sm dark:shadow-none">
+              <button className="w-full sm:w-auto px-8 py-4 bg-white/80 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-full text-slate-700 dark:text-white font-medium text-lg transition-all duration-300 hover:bg-white dark:hover:bg-white/10 hover:scale-105 hover:shadow-lg flex items-center justify-center gap-2 backdrop-blur-sm shadow-sm dark:shadow-none">
                 <Play className="w-4 h-4 fill-current" />
                 Watch Demo
               </button>
@@ -47,7 +47,7 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
             {/* Social Proof */}
             <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8 text-sm text-slate-500 dark:text-gray-400">
                 <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-brand-500 dark:text-brand-400" />
+                    <CheckCircle2 className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
                     <span>No credit card required</span>
                 </div>
                 <div className="hidden sm:block w-1 h-1 rounded-full bg-slate-300 dark:bg-gray-700" />
@@ -60,9 +60,9 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
             </div>
         </div>
 
-        {/* Hero Visual/Dashboard Mockup - Kept dark-themed for "Pro" software look even in light mode */}
+        {/* Hero Visual/Dashboard Mockup */}
         <div className="relative max-w-5xl mx-auto mt-8">
-          <div className="absolute -inset-1 bg-gradient-to-r from-brand-500 via-accent-purple to-accent-pink rounded-2xl blur opacity-30 animate-pulse"></div>
+          <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-2xl blur opacity-30 animate-pulse"></div>
           <div className="relative bg-[#0f172a] border border-white/10 rounded-2xl overflow-hidden shadow-2xl aspect-[16/9] md:aspect-[21/9]">
             {/* Mock UI Header */}
             <div className="h-10 bg-white/5 border-b border-white/10 flex items-center px-4 gap-2">
@@ -78,7 +78,7 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
                 <div className="col-span-2 flex flex-col gap-4">
                     <div className="h-32 rounded-xl bg-white/5 border border-white/5 p-4 flex flex-col justify-between">
                          <div className="flex justify-between items-start">
-                             <div className="w-8 h-8 rounded-lg bg-brand-500/20 flex items-center justify-center text-brand-400">
+                             <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400">
                                 <Sparkles size={16} />
                              </div>
                              <span className="text-green-400 text-xs font-mono">+24% vs last week</span>
@@ -109,14 +109,14 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
                 </div>
                 <div className="col-span-1 rounded-xl bg-gradient-to-b from-white/5 to-transparent border border-white/5 p-4">
                     <div className="flex items-center gap-2 mb-4">
-                         <div className="w-2 h-2 rounded-full bg-accent-pink animate-pulse" />
-                         <span className="text-xs font-bold text-accent-pink">LIVE AGENT</span>
+                         <div className="w-2 h-2 rounded-full bg-pink-500 animate-pulse" />
+                         <span className="text-xs font-bold text-pink-500">LIVE AGENT</span>
                     </div>
                     <div className="space-y-3">
-                        <div className="p-2 rounded-lg bg-accent-purple/10 border border-accent-purple/20 text-xs text-gray-300">
+                        <div className="p-2 rounded-lg bg-purple-500/10 border border-purple-500/20 text-xs text-gray-300">
                             Analyzing market trends for SUV pricing in Q3...
                         </div>
-                        <div className="p-2 rounded-lg bg-brand-500/10 border border-brand-500/20 text-xs text-gray-300">
+                        <div className="p-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-xs text-gray-300">
                             Detected 5 new leads from Listings #402 and #119.
                         </div>
                     </div>
