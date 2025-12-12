@@ -7,14 +7,10 @@ export default {
       const id = url.searchParams.get('id');
       if (!id) return new Response('Missing ID', { status: 400 });
 
-      // Hardcoded R2 Base URL (Public Bucket)
-      const r2BaseUrl = 'https://pub-ce9ab66f3fc6436f92644d16b5892006.r2.dev';
+      // Hardcoded R2 Base URL (Public Bucket) - Synced with Dashboard config
+      const r2BaseUrl = 'https://pub-43d994e414f04400938f65714774302c.r2.dev';
       
       // Handle case where ID is a full URL or just a filename
-      // If it is a full URL, we extract just the filename part to be safe, or if trusted, use as is.
-      // For this specific use case, we assume the user might pass full URL or just filename.
-      // We will strictly construct it to avoid open relay issues if possible, but flexibility is needed.
-      
       let targetUrl = '';
       if (id.startsWith('http')) {
           targetUrl = id; 
