@@ -12,7 +12,7 @@ import SEO from './SEO';
 
 // --- CONFIGURATION ---
 // Replace this with your actual R2 Public Bucket URL or Worker URL
-const R2_BASE_URL = 'https://pub-43d994e414f04400938f65714774302c.r2.dev'; 
+const R2_BASE_URL = 'https://pub-ce9ab66f3fc6436f92644d16b5892006.r2.dev'; 
 
 const POSTING_SITES = [
     { name: 'Autovit.ro', url: 'https://www.autovit.ro', color: 'bg-orange-600 hover:bg-orange-700' },    
@@ -102,10 +102,11 @@ const Dashboard: React.FC = () => {
             // 2. Fetch from R2
             // If the ID is a full URL, use it. Otherwise construct R2 URL.
             const url = reportId.startsWith('http') ? reportId : `${R2_BASE_URL}/${reportId}`;
+            console.log("Fetching report from:", url); // Debug log
             
             const response = await fetch(url);
             if (!response.ok) {
-                console.warn("Fetch failed, falling back to mock data.");
+                console.warn(`Fetch failed with status ${response.status}, falling back to mock data.`);
                 loadMockData();
                 setIsLoading(false);
                 return;

@@ -1,3 +1,4 @@
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -8,7 +9,7 @@ export default {
       if (!id) return new Response('Missing ID', { status: 400 });
 
       // Hardcoded R2 Base URL (Public Bucket) - Synced with Dashboard config
-      const r2BaseUrl = 'https://pub-43d994e414f04400938f65714774302c.r2.dev';
+      const r2BaseUrl = 'https://pub-ce9ab66f3fc6436f92644d16b5892006.r2.dev';
       
       // Handle case where ID is a full URL or just a filename
       let targetUrl = '';
