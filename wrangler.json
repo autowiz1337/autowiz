@@ -1,6 +1,6 @@
 
 {
-  "name": "velocity-ai",
+  "name": "autowiz",
   "main": "functions/spa_worker.js",
   "assets": {
     "directory": "./dist",
