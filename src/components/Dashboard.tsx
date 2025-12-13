@@ -232,13 +232,12 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen pt-20 pb-12 px-4 md:px-6 max-w-[1600px] mx-auto font-sans relative animate-in fade-in duration-700">
+    <div className="min-h-screen pt-20 pb-12 px-4 md:px-6 max-w-7xl mx-auto font-sans relative animate-in fade-in duration-700">
       <SEO title={`Report: ${reportData.title} | Velocity AI`} />
       
       {/* 
          LAYOUT UPDATE: ONE COLUMN
-         We removed the sidebar and the grid system. 
-         Everything is now stacked vertically in a single max-width container.
+         Everything is now stacked vertically in a single max-width container (max-w-7xl for tighter layout).
       */}
       <div className="flex flex-col gap-6">
           
@@ -263,9 +262,6 @@ const Dashboard: React.FC = () => {
                   <div className="flex flex-wrap items-center gap-6 text-sm text-slate-500 dark:text-gray-400 mt-3">
                     <span className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
                         <Calendar className="w-4 h-4 text-brand-500" /> {reportData.createdAt}
-                    </span>
-                    <span className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
-                        <MapPin className="w-4 h-4 text-brand-500" /> Bucharest
                     </span>
                     <a href={reportData.originalUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-brand-600 dark:text-brand-400 hover:underline px-3 py-1.5">
                         View Source <ExternalLink className="w-3 h-3" />
@@ -603,11 +599,18 @@ const Dashboard: React.FC = () => {
                           </div>
                           
                           <div className="flex items-center gap-2">
+                            {/* Updated Secondary Save Button with Active State Feedback */}
                             <button 
                                 onClick={handleSave}
-                                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors border border-slate-200 dark:border-white/10"
+                                disabled={isSaving}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all border ${
+                                    saveSuccess 
+                                    ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800' 
+                                    : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-white/10 border-slate-200 dark:border-white/10'
+                                }`}
                             >
-                                <Save className="w-4 h-4" /> Save Draft
+                                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : saveSuccess ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+                                {saveSuccess ? 'Saved' : 'Save Draft'}
                             </button>
 
                             <button 
