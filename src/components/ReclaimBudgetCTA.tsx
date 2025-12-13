@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ArrowRight, CheckCircle2, Check, Sparkles } from 'lucide-react';
 
@@ -100,7 +101,7 @@ const ReclaimBudgetCTA: React.FC<ReclaimBudgetCTAProps> = ({ onNavigate }) => {
                 <div className="flex flex-col items-center relative z-10">
                     <button 
                         onClick={() => onNavigate?.('checkout')}
-                        className="btn-primary group relative w-full sm:w-auto rounded-full px-12 py-5 text-xl font-bold text-white shadow-lg overflow-hidden transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2"
+                        className="btn-primary btn-glow group relative w-full sm:w-auto rounded-full px-12 py-5 text-xl font-bold text-white shadow-lg overflow-hidden transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2"
                     >
                           Stop Wasting Budget
                           <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />

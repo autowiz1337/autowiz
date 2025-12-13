@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Zap, Menu, X, Sun, Moon, Sparkles } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
@@ -83,7 +84,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage = 'landing' }) => {
                  {/* Optimize New Listing CTA */}
                  <Link
                     to="/checkout"
-                    className="btn-primary relative rounded-full px-5 py-2.5 text-sm font-bold overflow-hidden transition-all duration-300 hover:scale-105 flex items-center gap-2 shadow-lg"
+                    className="btn-primary btn-glow relative rounded-full px-5 py-2.5 text-sm font-bold overflow-hidden transition-all duration-300 hover:scale-105 flex items-center gap-2 shadow-lg"
                  >
                     <Sparkles className="w-4 h-4" />
                     Optimize New Listing
@@ -99,7 +100,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage = 'landing' }) => {
                 </Link>
                 <Link 
                     to="/checkout"
-                    className="btn-primary relative rounded-full px-6 py-3 text-base font-medium overflow-hidden transition-all duration-300 hover:scale-105 shadow-lg"
+                    className="btn-primary btn-glow relative rounded-full px-6 py-3 text-base font-medium overflow-hidden transition-all duration-300 hover:scale-105 shadow-lg"
                 >
                   Get Started
                 </Link>
@@ -141,7 +142,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage = 'landing' }) => {
                         setIsMobileMenuOpen(false);
                         navigate(isDashboard ? '/' : '/checkout');
                     }}
-                    className="btn-primary w-full py-4 rounded-xl font-bold text-lg mt-4 transition-all duration-300 hover:scale-[1.02] shadow-lg"
+                    className="btn-primary btn-glow w-full py-4 rounded-xl font-bold text-lg mt-4 transition-all duration-300 hover:scale-[1.02] shadow-lg"
                  >
                     {isDashboard ? 'Optimize New Listing' : 'Get Started'}
                  </button>
