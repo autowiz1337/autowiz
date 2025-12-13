@@ -1,3 +1,4 @@
+
 {
   "name": "velocity-ai",
   "main": "functions/spa_worker.js",
@@ -5,5 +6,11 @@
     "directory": "./dist",
     "binding": "ASSETS"
   },
-  "compatibility_date": "2024-09-23"
+  "compatibility_date": "2024-09-23",
+  "routes": [
+    {
+      "pattern": "autowiz.ro",
+      "custom_domain": true
+    }
+  ]
 }
