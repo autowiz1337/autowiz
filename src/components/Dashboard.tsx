@@ -10,10 +10,6 @@ import { BackendReport, DashboardData } from '../types/Report';
 import { mapBackendReportToDashboard } from '../utils/reportMapper';
 import SEO from './SEO';
 
-// --- CONFIGURATION ---
-// Replace this with your actual R2 Public Bucket URL or Worker URL
-const R2_BASE_URL = 'https://pub-ce9ab66f3fc6436f92644d16b5892006.r2.dev'; 
-
 const POSTING_SITES = [
     { name: 'Autovit.ro', url: 'https://www.autovit.ro', color: 'bg-orange-600 hover:bg-orange-700' },    
     { name: 'Carzz.ro', url: 'https://carzz.ro', color: 'bg-red-600 hover:bg-red-700' },
@@ -99,12 +95,13 @@ const Dashboard: React.FC = () => {
         }
 
         try {
-            // 2. Fetch from R2
-            // If the ID is a full URL, use it. Otherwise construct R2 URL.
-            const url = reportId.startsWith('http') ? reportId : `${R2_BASE_URL}/${reportId}`;
-            console.log("Fetching report from:", url); // Debug log
+            // 2. Fetch via PROXY to bypass CORS restrictions
+            // We use the worker endpoint defined in functions/spa_worker.js
+            const proxyUrl = `/api/proxy-r2?id=${encodeURIComponent(reportId)}`;
+            console.log("Fetching report via proxy:", proxyUrl);
             
-            const response = await fetch(url);
+            const response = await fetch(proxyUrl);
+            
             if (!response.ok) {
                 console.warn(`Fetch failed with status ${response.status}, falling back to mock data.`);
                 loadMockData();
@@ -112,7 +109,9 @@ const Dashboard: React.FC = () => {
                 return;
             }
             
-            const rawData: BackendReport = await response.json();
+            const rawData = await response.json();
+            console.log("Raw JSON received:", rawData); // Debug log for inspection
+
             const mapped = mapBackendReportToDashboard(rawData);
             
             setReportData(mapped);

@@ -1,24 +1,29 @@
 
 export interface BackendReport {
-  Id: number;
-  Url: string;
-  Titlu?: string; // Optional as per mapping table fallback
-  CreatedAt: string;
+  Id?: number;
+  Url?: string;
+  Titlu?: string;
+  Title?: string; // Add variant
+  CreatedAt?: string;
   
-  // Strategy
-  targetPersona: string;
-  emotionalTrigger: string;
-  topSellingPoints: string; // Comma-separated string
+  targetPersona?: string;
+  TargetPersona?: string;
   
-  // Content
-  listingDescription: string;
-  descriptionWordCount?: number;
+  emotionalTrigger?: string;
+  EmotionalTrigger?: string;
   
-  // Media Assets
-  Images: string; // Comma-separated URLs
-  Video: string; // Comma-separated URLs (We select index 1)
-  "ZIP Images": string;
-  "Youtube ID": string; // Video ID for embedding
+  topSellingPoints?: string | string[];
+  TopSellingPoints?: string | string[];
+  
+  listingDescription?: string;
+  ListingDescription?: string;
+  
+  Images?: string | string[];
+  Video?: string | string[];
+  
+  "ZIP Images"?: string;
+  "Youtube ID"?: string;
+  YoutubeID?: string;
 }
 
 export interface DashboardData {
