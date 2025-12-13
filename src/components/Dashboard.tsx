@@ -11,11 +11,17 @@ import { mapBackendReportToDashboard } from '../utils/reportMapper';
 import SEO from './SEO';
 
 const POSTING_SITES = [
-    { name: 'Autovit.ro', url: 'https://www.autovit.ro', color: 'bg-orange-600 hover:bg-orange-700' },    
-    { name: 'Carzz.ro', url: 'https://carzz.ro', color: 'bg-red-600 hover:bg-red-700' },
-    { name: 'BestAuto', url: 'https://www.bestauto.ro', color: 'bg-blue-600 hover:bg-blue-700' },
-    { name: 'Plus-Auto', url: 'https://plus-auto.ro', color: 'bg-green-600 hover:bg-green-700' },
-    { name: 'olx.ro', url: 'https://olx.ro', color: 'bg-teal-800 hover:bg-teal-900' },
+    { name: 'Autovit.ro', url: 'https://www.autovit.ro' },    
+    { name: 'Carzz.ro', url: 'https://carzz.ro' },
+    { name: 'BestAuto', url: 'https://www.bestauto.ro' },
+    { name: 'Plus-Auto', url: 'https://plus-auto.ro' },
+    { name: 'olx.ro', url: 'https://olx.ro' },
+];
+
+const NOTIFICATIONS = [
+  { id: 1, title: "Prediction", message: "This copy is 40% more likely to generate a phone call than the market average.", icon: Zap, color: "text-green-500" },
+  { id: 2, title: "SEO Alert", message: "'xDrive' keyword identified as high-value for winter visibility.", icon: Search, color: "text-blue-500" },
+  { id: 3, title: "Market Watch", message: "Price analysis suggests this listing is a 'Great Deal' badge candidate.", icon: Target, color: "text-yellow-500" }
 ];
 
 const Dashboard: React.FC = () => {
@@ -25,6 +31,7 @@ const Dashboard: React.FC = () => {
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [activeNotification, setActiveNotification] = useState<typeof NOTIFICATIONS[0] | null>(null);
   
   // Data State
   const [reportData, setReportData] = useState<DashboardData | null>(null);
@@ -137,6 +144,24 @@ const Dashboard: React.FC = () => {
     fetchReport();
   }, []);
 
+  // Notification Stream Logic
+  useEffect(() => {
+    const showNotification = (index: number) => {
+      setActiveNotification(NOTIFICATIONS[index]);
+      setTimeout(() => setActiveNotification(null), 5000); // Hide after 5s
+    };
+
+    const t1 = setTimeout(() => showNotification(0), 4000);
+    const t2 = setTimeout(() => showNotification(1), 15000);
+    const t3 = setTimeout(() => showNotification(2), 30000);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
+  }, []);
+
   // Auto-Save Effect
   useEffect(() => {
       if (isLoading || !reportData) return;
@@ -235,6 +260,29 @@ const Dashboard: React.FC = () => {
     <div className="min-h-screen pt-20 pb-12 px-4 md:px-6 max-w-7xl mx-auto font-sans relative animate-in fade-in duration-700">
       <SEO title={`Report: ${reportData.title} | Velocity AI`} />
       
+      {/* LEAD SIMULATOR NOTIFICATION STREAM */}
+      <div className="fixed top-24 right-6 z-50 pointer-events-none">
+        {activeNotification && (
+          <div className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-white/10 p-4 rounded-xl shadow-2xl flex items-start gap-3 w-80 animate-in slide-in-from-right fade-in duration-500 pointer-events-auto">
+             <div className={`p-2 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 ${activeNotification.color}`}>
+                <activeNotification.icon className="w-5 h-5" />
+             </div>
+             <div>
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                   {activeNotification.title}
+                   <span className="flex h-2 w-2 relative">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-500"></span>
+                    </span>
+                </h4>
+                <p className="text-xs text-slate-600 dark:text-gray-400 mt-1 leading-relaxed">
+                   {activeNotification.message}
+                </p>
+             </div>
+          </div>
+        )}
+      </div>
+
       {/* 
          LAYOUT UPDATE: ONE COLUMN
          Everything is now stacked vertically in a single max-width container (max-w-7xl for tighter layout).
@@ -298,7 +346,7 @@ const Dashboard: React.FC = () => {
                         <button
                             key={site.name}
                             onClick={() => window.open(site.url, '_blank')}
-                            className={`group relative overflow-hidden rounded-xl px-6 py-2.5 text-sm font-bold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl ${site.color}`}
+                            className="group relative overflow-hidden rounded-xl px-5 py-2.5 text-xs font-bold transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center gap-2 bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/20 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 hover:border-indigo-300 dark:hover:border-indigo-500/40"
                         >
                             <div className="relative z-10 flex items-center gap-2">
                                {site.name}
