@@ -42,6 +42,9 @@ const Dashboard: React.FC = () => {
   const [editableDescription, setEditableDescription] = useState("");
   const [editableTitle, setEditableTitle] = useState("");
 
+  // Helper to generate consistent storage keys
+  const getStorageKey = (id: string | null) => `velocity_dashboard_draft_${id || 'demo'}`;
+
   useEffect(() => {
     const fetchReport = async () => {
         setIsLoading(true);
@@ -50,6 +53,25 @@ const Dashboard: React.FC = () => {
         // 1. Get ID from URL
         const params = new URLSearchParams(window.location.search);
         const reportId = params.get('id');
+
+        // Helper: Check for local overrides
+        const loadLocalOverrides = (defaultTitle: string, defaultDesc: string) => {
+            const key = getStorageKey(reportId);
+            const saved = localStorage.getItem(key);
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    return {
+                        title: parsed.title || defaultTitle,
+                        description: parsed.description || defaultDesc,
+                        isDraft: true
+                    };
+                } catch (e) {
+                    console.warn("Failed to parse local draft");
+                }
+            }
+            return { title: defaultTitle, description: defaultDesc, isDraft: false };
+        };
 
         // Helper to load mock data
         const loadMockData = () => {
@@ -69,18 +91,21 @@ const Dashboard: React.FC = () => {
                 "Youtube ID": "VZYsx5D8oIY" // Mercedes review video
              };
              const mapped = mapBackendReportToDashboard(mockRaw);
+             const { title, description, isDraft } = loadLocalOverrides(mapped.title, mapped.description);
+
              setReportData(mapped);
-             setEditableTitle(mapped.title);
-             setEditableDescription(mapped.description);
+             setEditableTitle(title);
+             setEditableDescription(description);
              
-             // If we tried to load an ID but failed, warn the user we are in demo mode
              if (reportId) {
                  setActiveNotification({
                      id: 99,
-                     title: "Demo Mode Active",
-                     message: `Could not load Report ID: ${reportId}. Showing demo data instead.`,
-                     icon: AlertTriangle,
-                     color: "text-yellow-500"
+                     title: isDraft ? "Draft Restored" : "Demo Mode Active",
+                     message: isDraft 
+                        ? "We restored your previous edits from browser memory." 
+                        : `Could not load Report ID: ${reportId}. Showing demo data instead.`,
+                     icon: isDraft ? CheckCircle2 : AlertTriangle,
+                     color: isDraft ? "text-green-500" : "text-yellow-500"
                  });
              }
         };
@@ -96,7 +121,6 @@ const Dashboard: React.FC = () => {
 
         try {
             // 2. Fetch via PROXY to bypass CORS restrictions
-            // We use the worker endpoint defined in functions/spa_worker.js
             const proxyUrl = `/api/proxy-r2?id=${encodeURIComponent(reportId)}`;
             console.log("Fetching report via proxy:", proxyUrl);
             
@@ -110,13 +134,30 @@ const Dashboard: React.FC = () => {
             }
             
             const rawData = await response.json();
-            console.log("Raw JSON received:", rawData); // Debug log for inspection
+            console.log("Raw JSON received:", rawData);
 
             const mapped = mapBackendReportToDashboard(rawData);
             
+            // Check for Local Storage Overrides
+            const { title, description, isDraft } = loadLocalOverrides(mapped.title, mapped.description);
+            
             setReportData(mapped);
-            setEditableTitle(mapped.title);
-            setEditableDescription(mapped.description);
+            setEditableTitle(title);
+            setEditableDescription(description);
+
+            if (isDraft) {
+                // Inform user we loaded their local changes
+                setTimeout(() => {
+                    setActiveNotification({
+                        id: 98,
+                        title: "Edits Restored",
+                        message: "We found unsaved changes in your browser and restored them.",
+                        icon: Sparkles,
+                        color: "text-brand-500"
+                    });
+                }, 2000);
+            }
+
         } catch (err) {
             console.error("Network error, falling back to mock data:", err);
             loadMockData();
@@ -128,14 +169,29 @@ const Dashboard: React.FC = () => {
     fetchReport();
   }, []);
 
+  // Auto-Save Effect
+  useEffect(() => {
+      if (isLoading || !reportData) return;
+
+      const reportId = new URLSearchParams(window.location.search).get('id');
+      const key = getStorageKey(reportId);
+      
+      const draftData = {
+          title: editableTitle,
+          description: editableDescription,
+          timestamp: Date.now()
+      };
+
+      localStorage.setItem(key, JSON.stringify(draftData));
+  }, [editableTitle, editableDescription, isLoading, reportData]);
+
   // Notification Stream Logic
   useEffect(() => {
     const showNotification = (index: number) => {
-      // Only show simulated notifications if we aren't showing a system warning (like Demo Mode)
-      if (activeNotification?.id === 99) return; 
+      if (activeNotification?.id === 99 || activeNotification?.id === 98) return; 
       
       setActiveNotification(NOTIFICATIONS[index]);
-      setTimeout(() => setActiveNotification(null), 5000); // Hide after 5s
+      setTimeout(() => setActiveNotification(null), 5000); 
     };
 
     const t1 = setTimeout(() => showNotification(0), 4000);
@@ -157,12 +213,20 @@ const Dashboard: React.FC = () => {
 
   const handleSave = () => {
     setIsSaving(true);
-    // Mock save delay
+    // Explicit save trigger (even though we autosave) to give user feedback
+    const reportId = new URLSearchParams(window.location.search).get('id');
+    const key = getStorageKey(reportId);
+    localStorage.setItem(key, JSON.stringify({
+        title: editableTitle,
+        description: editableDescription,
+        timestamp: Date.now()
+    }));
+
     setTimeout(() => {
         setIsSaving(false);
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 3000);
-    }, 1000);
+    }, 800);
   };
 
   if (isLoading) {
@@ -231,7 +295,7 @@ const Dashboard: React.FC = () => {
              <div>
                 <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                    {activeNotification.title}
-                   {activeNotification.id !== 99 && (
+                   {(activeNotification.id !== 99 && activeNotification.id !== 98) && (
                        <span className="flex h-2 w-2 relative">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
                           <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-500"></span>
@@ -361,7 +425,7 @@ const Dashboard: React.FC = () => {
                      ) : (
                         <Save className="w-4 h-4" /> 
                      )}
-                     {saveSuccess ? 'Saved!' : 'Save Changes'}
+                     {saveSuccess ? 'Saved to Browser!' : 'Save Changes'}
                    </button>
                 </div>
              </div>
