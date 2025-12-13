@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { MoveHorizontal, PenTool, CheckCircle2, ArrowRight, TrendingUp } from 'lucide-react';
 
@@ -90,7 +91,7 @@ const CopyComparison: React.FC<CopyComparisonProps> = ({ onNavigate }) => {
                 <div className="mt-10">
                     <button 
                         onClick={() => onNavigate?.('checkout')}
-                        className="btn-primary group relative rounded-full px-8 py-4 text-lg font-bold text-white shadow-lg overflow-hidden transition-all duration-300 hover:scale-105 flex items-center gap-2"
+                        className="btn-primary btn-glow group relative rounded-full px-8 py-4 text-lg font-bold text-white shadow-lg overflow-hidden transition-all duration-300 hover:scale-105 flex items-center gap-2"
                     >
                         Rewrite My Listings
                         <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />

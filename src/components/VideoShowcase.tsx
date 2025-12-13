@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Play, Pause, Volume2, Subtitles, FileText, Settings, Maximize2, Film, ArrowRight, Star } from 'lucide-react';
 
@@ -150,7 +151,7 @@ const VideoShowcase: React.FC<VideoShowcaseProps> = ({ onNavigate }) => {
             <div className="flex flex-col items-center justify-center">
                 <button 
                     onClick={() => onNavigate?.('checkout')}
-                    className="btn-primary group relative w-full sm:w-auto rounded-full px-12 py-5 text-xl font-bold overflow-hidden transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2 shadow-lg"
+                    className="btn-primary btn-glow group relative w-full sm:w-auto rounded-full px-12 py-5 text-xl font-bold overflow-hidden transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2 shadow-lg"
                 >
                     Get Started Today
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, Mic, Bot, Volume2, ArrowRight, BarChart3, CheckCircle2, Star } from 'lucide-react';
 
@@ -210,7 +211,7 @@ const VoiceoverShowcase: React.FC<VoiceoverShowcaseProps> = ({ onNavigate }) => 
             <div className="mt-10">
                 <button 
                     onClick={() => onNavigate?.('checkout')}
-                    className="btn-primary group relative rounded-full px-8 py-4 text-lg font-bold text-white shadow-lg overflow-hidden transition-all duration-300 hover:scale-105 flex items-center gap-2"
+                    className="btn-primary btn-glow group relative rounded-full px-8 py-4 text-lg font-bold text-white shadow-lg overflow-hidden transition-all duration-300 hover:scale-105 flex items-center gap-2"
                 >
                     Generate Sales Voiceovers
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
