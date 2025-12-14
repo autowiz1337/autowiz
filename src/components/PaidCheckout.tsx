@@ -5,8 +5,8 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useNavigate } from 'react-router-dom';
 
-// Initialize Stripe (Replace with your Publishable Key)
-const stripePromise = loadStripe('pk_test_TYooMQauvdEDq54NiTphI7jx');
+// Initialize Stripe with the provided Test Key
+const stripePromise = loadStripe('pk_test_51MActHIUPUeJt7pnEfcmUxZB08nYw1Q8Dj7PvsVzwmVbTFCQCTMMDMEXf95gbTAkXliikRpUgLV5iS165PdVCuZa00ZUXtw59w');
 
 interface PaidCheckoutProps {
   onBack: () => void;
