@@ -234,7 +234,7 @@ interface FormDataType {
   voiceGender: string;
 }
 
-const PaymentForm: React.FC<{ onSuccess: () => void; formData: FormDataType }> = ({ onSuccess, formData }) => {
+const PaymentForm: React.FC<{ onSuccess: () => void; formData: FormDataType; orderId: number | null }> = ({ onSuccess, formData, orderId }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [error, setError] = useState<string | null>(null);
@@ -272,16 +272,23 @@ const PaymentForm: React.FC<{ onSuccess: () => void; formData: FormDataType }> =
         }
 
         if (paymentMethod) {
+             const payload: any = {
+                 ...formData,
+                 product: 'pro_optimization',
+                 stage: 'payment_success',
+                 payment_method_id: paymentMethod.id,
+                 timestamp: new Date().toISOString()
+             };
+
+             // Include ID if captured in step 1 to trigger update instead of create
+             if (orderId) {
+                 payload.Id = orderId;
+             }
+
              await fetch('https://app.autowizz.cfd/webhook/new-order', {
                  method: 'POST',
                  headers: { 'Content-Type': 'application/json' },
-                 body: JSON.stringify({
-                     ...formData,
-                     product: 'pro_optimization',
-                     stage: 'payment_success',
-                     payment_method_id: paymentMethod.id,
-                     timestamp: new Date().toISOString()
-                 })
+                 body: JSON.stringify(payload)
              });
 
              setProcessing(false);
@@ -379,6 +386,7 @@ const PaymentForm: React.FC<{ onSuccess: () => void; formData: FormDataType }> =
 
 const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
   const [step, setStep] = useState<1 | 2>(1);
+  const [orderId, setOrderId] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -483,7 +491,7 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
     setIsSubmitting(true);
 
     try {
-      await fetch('https://app.autowizz.cfd/webhook/new-order', {
+      const response = await fetch('https://app.autowizz.cfd/webhook/new-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -493,6 +501,19 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
             timestamp: new Date().toISOString()
         }),
       });
+
+      // Capture database ID from response for subsequent update
+      if (response.ok) {
+          try {
+              const data = await response.json();
+              if (Array.isArray(data) && data.length > 0 && data[0].Id) {
+                  setOrderId(data[0].Id);
+                  console.log("Order initiated with ID:", data[0].Id);
+              }
+          } catch (jsonError) {
+              console.warn("Could not parse Init response:", jsonError);
+          }
+      }
 
       setTimeout(() => {
         setStep(2);
@@ -792,7 +813,7 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
                         </div>
 
                         <Elements stripe={stripePromise}>
-                            <PaymentForm onSuccess={handlePaymentSuccess} formData={formData} />
+                            <PaymentForm onSuccess={handlePaymentSuccess} formData={formData} orderId={orderId} />
                         </Elements>
                         
                         <div className="mt-8 text-center">
