@@ -320,34 +320,48 @@ const PaymentForm: React.FC<{ onSuccess: () => void; formData: FormDataType; ord
 
         <form onSubmit={handleSubmit} className="space-y-6">
         
-        <div className="relative rounded-xl p-[3px] shadow-[0_0_40px_-10px_rgba(124,58,237,0.3)] group">
-            <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 opacity-100 rounded-xl" />
+        {/* ENHANCED PAYMENT CONTAINER */}
+        <div className="relative group transition-all duration-300 focus-within:scale-[1.02]">
+            {/* Animated Glow Border matching the button */}
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-orange-500 via-yellow-500 to-orange-500 rounded-2xl opacity-75 blur-sm group-focus-within:opacity-100 group-focus-within:blur-md transition duration-500 animate-gradient-x"></div>
             
-            <div className="relative bg-white dark:bg-[#1e293b] p-5 rounded-[9px]">
-                <CardElement
-                options={{
-                    style: {
-                    base: {
-                        fontSize: '16px',
-                        color: '#424770', 
-                        '::placeholder': {
-                        color: '#94a3b8',
-                        },
-                        iconColor: '#0ea5e9',
-                    },
-                    invalid: {
-                        color: '#ef4444',
-                    },
-                    },
-                }}
-                />
+            <div className="relative bg-white dark:bg-[#1e293b] p-6 rounded-xl shadow-2xl">
+                
+                {/* Visual Label */}
+                <div className="flex items-center gap-2 mb-4 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-700/50 pb-2">
+                    <CreditCard className="w-4 h-4 text-orange-500" />
+                    <span>Card Information</span>
+                </div>
+
+                <div className="py-2">
+                    <CardElement
+                        options={{
+                            hidePostalCode: true, // REMOVED ZIP
+                            style: {
+                                base: {
+                                    fontSize: '18px', // Increased Font Size
+                                    fontFamily: '"Inter", sans-serif',
+                                    color: '#1e293b', // Default slate-800
+                                    iconColor: '#f97316', // Orange-500
+                                    '::placeholder': {
+                                        color: '#94a3b8',
+                                    },
+                                },
+                                invalid: {
+                                    color: '#ef4444',
+                                    iconColor: '#ef4444',
+                                },
+                            },
+                        }}
+                    />
+                </div>
             </div>
         </div>
         
         {error && (
-            <div className="flex items-center gap-2 text-red-500 text-sm bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
-            <AlertCircle className="w-4 h-4" />
-            {error}
+            <div className="flex items-center gap-2 text-red-500 text-sm bg-red-50 dark:bg-red-900/20 p-3 rounded-lg animate-in fade-in slide-in-from-top-1">
+                <AlertCircle className="w-4 h-4" />
+                {error}
             </div>
         )}
 
