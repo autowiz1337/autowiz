@@ -239,8 +239,22 @@ const PaymentForm: React.FC<{ onSuccess: () => void; formData: FormDataType; ord
   const elements = useElements();
   const [error, setError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
+  const [isDark, setIsDark] = useState(document.documentElement.classList.contains('dark'));
 
   const firstName = formData.name ? formData.name.split(' ')[0] : 'there';
+
+  // Detect theme change to update Stripe Element styling dynamically
+  useEffect(() => {
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.attributeName === 'class') {
+                setIsDark(document.documentElement.classList.contains('dark'));
+            }
+        });
+    });
+    observer.observe(document.documentElement, { attributes: true });
+    return () => observer.disconnect();
+  }, []);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -321,30 +335,32 @@ const PaymentForm: React.FC<{ onSuccess: () => void; formData: FormDataType; ord
         <form onSubmit={handleSubmit} className="space-y-6">
         
         {/* ENHANCED PAYMENT CONTAINER */}
-        <div className="relative group transition-all duration-300 focus-within:scale-[1.02]">
+        <div className="relative group transition-all duration-300">
             {/* Animated Glow Border matching the button */}
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-orange-500 via-yellow-500 to-orange-500 rounded-2xl opacity-75 blur-sm group-focus-within:opacity-100 group-focus-within:blur-md transition duration-500 animate-gradient-x"></div>
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-orange-500 via-yellow-500 to-orange-500 rounded-2xl opacity-75 blur-sm transition duration-500 animate-gradient-x group-focus-within:opacity-100 group-focus-within:blur-lg group-focus-within:scale-[1.02]"></div>
             
-            <div className="relative bg-white dark:bg-[#1e293b] p-6 rounded-xl shadow-2xl">
+            <div className="relative bg-white dark:bg-[#1e293b] p-6 rounded-xl shadow-2xl transition-transform duration-300 group-focus-within:scale-[1.01]">
                 
                 {/* Visual Label */}
                 <div className="flex items-center gap-2 mb-4 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-700/50 pb-2">
-                    <CreditCard className="w-4 h-4 text-orange-500" />
+                    <CreditCard className="w-4 h-4 text-orange-500 group-focus-within:animate-bounce" />
                     <span>Card Information</span>
                 </div>
 
                 <div className="py-2">
                     <CardElement
                         options={{
-                            hidePostalCode: true, // REMOVED ZIP
+                            hidePostalCode: true,
                             style: {
                                 base: {
-                                    fontSize: '18px', // Increased Font Size
+                                    fontSize: '18px',
                                     fontFamily: '"Inter", sans-serif',
-                                    color: '#1e293b', // Default slate-800
-                                    iconColor: '#f97316', // Orange-500
+                                    fontWeight: '700', // Bold text for visibility
+                                    color: isDark ? '#ffffff' : '#1e293b', // Dynamic contrast
+                                    iconColor: '#f97316',
                                     '::placeholder': {
-                                        color: '#94a3b8',
+                                        color: isDark ? '#94a3b8' : '#94a3b8',
+                                        fontWeight: '400',
                                     },
                                 },
                                 invalid: {
