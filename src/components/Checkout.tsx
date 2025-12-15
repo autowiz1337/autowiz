@@ -68,7 +68,8 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack }) => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('/api/lead', {
+      // Reverted to external webhook for data capture
+      const response = await fetch('https://app.autowizz.cfd/webhook/new-order', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

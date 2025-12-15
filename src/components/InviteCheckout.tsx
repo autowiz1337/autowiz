@@ -91,8 +91,8 @@ const InviteCheckout: React.FC<InviteCheckoutProps> = ({ onBack }) => {
     setIsSubmitting(true);
 
     try {
-      // POST to Internal API
-      const response = await fetch('/api/lead', {
+      // Reverted to external webhook for data capture
+      const response = await fetch('https://app.autowizz.cfd/webhook/new-order', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

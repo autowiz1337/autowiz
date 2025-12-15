@@ -294,7 +294,7 @@ const PaymentForm: React.FC<{ onSuccess: () => void; formData: FormDataType; ord
                  timestamp: new Date().toISOString()
              };
 
-             // Using internal Cloudflare Function instead of external webhook
+             // Using internal Cloudflare Function instead of external webhook for secure charge
              const response = await fetch('/api/charge', {
                  method: 'POST',
                  headers: { 'Content-Type': 'application/json' },
@@ -523,8 +523,8 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
     setIsSubmitting(true);
 
     try {
-      // Replaced webhook with internal /api/lead call
-      const response = await fetch('/api/lead', {
+      // Reverted to external webhook for data capture as requested
+      const response = await fetch('https://app.autowizz.cfd/webhook/new-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 

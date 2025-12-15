@@ -1,18 +1,16 @@
 
 # 💳 Stripe Payment & Lead Capture Implementation Guide
 
-## ✅ Current Architecture: Serverless (No n8n)
+## ✅ Current Architecture: Hybrid Flow (Security + Integration)
 
-We have implemented **Option B**, which uses Cloudflare Pages Functions to handle backend logic securely. This removes the dependency on external automation tools like n8n for critical payment processing.
+We have implemented a robust hybrid architecture to satisfy both security requirements and external integration needs (CRM/n8n).
 
-### Why this is better:
-1.  **Security**: Your Stripe Secret Key is stored in Cloudflare Environment Variables, never exposed to the frontend.
-2.  **Speed**: Logic runs on the Edge, closer to the user.
-3.  **Simplicity**: One codebase manages both frontend and backend.
+1.  **Lead Capture & Data Submission**: Uses the **n8n Webhook** directly. This ensures all lead data (Step 1, Pilot, Invite) flows into your existing automation immediately.
+2.  **Payment Processing**: Uses **Cloudflare Functions** (Serverless) to handle Stripe Charge securely. This keeps your Stripe Secret Key hidden from the frontend.
 
 ---
 
-## 1. Setup Instructions (Critical)
+## 1. Setup Instructions (Critical for Payment)
 
 To make the payment system work, you **MUST** configure your Cloudflare environment.
 
@@ -28,12 +26,17 @@ To make the payment system work, you **MUST** configure your Cloudflare environm
 
 ---
 
-## 2. API Endpoints Created
+## 2. API Endpoints
 
-The file `functions/spa_worker.js` now handles two API routes:
+### A. `POST https://app.autowizz.cfd/webhook/new-order` (External)
+*   **Purpose**: Lead capture for all flows (Free Pilot, Invite, Step 1 of Paid Checkout).
+*   **Data Flow**: Frontend -> External Webhook (n8n).
+*   **Why**: Maintains your existing CRM/Data logic without changes.
 
-### A. `POST /api/charge`
-*   **Purpose**: Creates and confirms a Stripe Payment Intent.
+### B. `POST /api/charge` (Internal Cloudflare Function)
+*   **Purpose**: Securely creates and confirms a Stripe Payment Intent.
+*   **Data Flow**: Frontend -> Cloudflare Worker -> Stripe API.
+*   **Why**: Hides the `sk_live_` key from the browser.
 *   **Input**:
     ```json
     {
@@ -44,28 +47,26 @@ The file `functions/spa_worker.js` now handles two API routes:
     ```
 *   **Output**: `{ "success": true, "id": "pi_..." }`
 
-### B. `POST /api/lead`
-*   **Purpose**: Captures lead data from Step 1, Free Pilot, or Invite flows.
-*   **Current Behavior**: Logs the lead to the Cloudflare Worker console and returns success.
-*   **Future Upgrade**: You can edit `functions/spa_worker.js` to send this data to a CRM, Google Sheet, or email service via their APIs.
-
 ---
 
-## 3. Testing Payments
+## 3. Testing
 
-You can test the flow using Stripe Test Cards (if you use your `sk_test_` key in Cloudflare).
+### Leads (Webhook)
+Submitting the form on `/pilot` or Step 1 of `/checkout` should trigger your n8n workflow immediately.
 
-| Scenario | Card Number | Result |
-| :--- | :--- | :--- |
-| **Success** | `4242 4242 4242 4242` | Returns success, redirects to dashboard. |
-| **Declined** | `4000 0000 0000 0002` | Shows "Your card was declined" error. |
+### Payments (Cloudflare)
+Step 2 of `/checkout` processes the credit card.
+*   **Success**: Redirects to dashboard.
+*   **Failure**: Shows Stripe error message (e.g., "Insufficient funds").
 
 ---
 
 ## 4. Frontend Integration Status
 
-*   **`PaidCheckout.tsx`**: Updated to POST to `/api/charge`.
-*   **`Checkout.tsx`**: Updated to POST to `/api/lead`.
-*   **`InviteCheckout.tsx`**: Updated to POST to `/api/lead`.
+*   **`Checkout.tsx`**: Uses Webhook.
+*   **`InviteCheckout.tsx`**: Uses Webhook.
+*   **`PaidCheckout.tsx`**: 
+    *   Step 1 (Contact Info): Uses Webhook.
+    *   Step 2 (Payment): Uses `/api/charge`.
 
-**Next Steps**: Once you deploy, verify the "Network" tab in your browser developer tools to ensure requests are hitting your domain (e.g., `https://app.autowizz.cfd/api/charge`) and returning `200 OK`.
+**Next Steps**: Deploy and verify both data streams are working.
