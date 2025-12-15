@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { CheckCircle2, Lock, ArrowRight, ShieldCheck, Clock, Loader2, CreditCard, AlertCircle, Star, Quote, UserCheck, Users, MessageSquare, Mic, Check, Eye, Zap, MapPin, Globe, Database, Image, Camera, Film } from 'lucide-react';
+import { CheckCircle2, Lock, ArrowRight, ShieldCheck, Clock, Loader2, CreditCard, AlertCircle, Star, Quote, UserCheck, Users, MessageSquare, Mic, Check, Eye, Zap, MapPin, Globe, Database, Image, Camera, Film, Home } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useNavigate } from 'react-router-dom';
@@ -270,6 +270,7 @@ const PaymentForm: React.FC<{ onSuccess: () => void; formData: FormDataType; ord
 
     if (cardElement) {
       try {
+        // 1. Create Payment Method via Stripe
         const { error, paymentMethod } = await stripe.createPaymentMethod({
           type: 'card',
           card: cardElement,
@@ -289,12 +290,12 @@ const PaymentForm: React.FC<{ onSuccess: () => void; formData: FormDataType; ord
              const payload: any = {
                  ...formData,
                  product: 'pro_optimization',
-                 stage: 'payment_success',
+                 stage: 'payment_attempt',
                  payment_method_id: paymentMethod.id,
                  timestamp: new Date().toISOString()
              };
 
-             // Using internal Cloudflare Function instead of external webhook for secure charge
+             // 2. Charge via Cloudflare Worker (Secure)
              const response = await fetch('/api/charge', {
                  method: 'POST',
                  headers: { 'Content-Type': 'application/json' },
@@ -305,6 +306,24 @@ const PaymentForm: React.FC<{ onSuccess: () => void; formData: FormDataType; ord
 
              if (result.error) {
                  throw new Error(result.error);
+             }
+
+             // 3. Send Payment ID to External Webhook (n8n/CRM)
+             // This ensures the CRM gets the Transaction ID for matching.
+             try {
+                 await fetch('https://app.autowizz.cfd/webhook/new-order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ...formData,
+                        product: 'pro_optimization',
+                        stage: 'payment_complete',
+                        payment_id: result.id, // ID from Stripe/Cloudflare response
+                        timestamp: new Date().toISOString()
+                    })
+                 });
+             } catch (webhookError) {
+                 console.error("Webhook notification failed, but payment succeeded", webhookError);
              }
 
              setProcessing(false);
@@ -420,6 +439,7 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
   const [step, setStep] = useState<1 | 2>(1);
   const [orderId, setOrderId] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -552,9 +572,46 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
   };
 
   const handlePaymentSuccess = () => {
-     alert("Payment Successful! Redirecting to dashboard...");
-     navigate('/dashboard'); 
+     setIsSuccess(true);
+     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  if (isSuccess) {
+    return (
+        <div className="min-h-screen bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-white pt-20 flex flex-col items-center justify-center px-6">
+             <div className="bg-white dark:bg-[#0f172a] p-8 md:p-12 rounded-3xl border border-slate-200 dark:border-white/10 shadow-2xl text-center max-w-lg w-full relative overflow-hidden animate-fade-in-up">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500 via-emerald-400 to-green-500"></div>
+                
+                <div className="w-20 h-20 bg-green-100 dark:bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-8 animate-pop">
+                    <CheckCircle2 className="w-10 h-10 text-green-600 dark:text-green-400" />
+                </div>
+                
+                <h2 className="text-3xl font-bold mb-4 text-slate-900 dark:text-white">Order Confirmed!</h2>
+                <p className="text-slate-600 dark:text-gray-400 mb-8 leading-relaxed text-lg">
+                    Thank you, <span className="font-bold text-slate-900 dark:text-white">{formData.name.split(' ')[0]}</span>.
+                    <br/><br/>
+                    Your payment was successful. Our AI engines have started processing your listing. You will receive the optimized assets at <strong className="text-indigo-600 dark:text-indigo-400">{formData.email}</strong> shortly.
+                </p>
+                
+                <div className="bg-slate-50 dark:bg-white/5 rounded-xl p-4 mb-8 text-left border border-slate-100 dark:border-white/5">
+                    <div className="text-xs font-bold text-slate-500 dark:text-gray-500 uppercase tracking-wider mb-2">Next Steps</div>
+                    <ul className="space-y-2 text-sm text-slate-700 dark:text-gray-300">
+                        <li className="flex items-center gap-2">
+                            <CheckCircle2 className="w-4 h-4 text-green-500" /> Check your inbox for the "Order Receipt" email.
+                        </li>
+                        <li className="flex items-center gap-2">
+                            <CheckCircle2 className="w-4 h-4 text-green-500" /> Wait ~15 mins for optimization to complete.
+                        </li>
+                    </ul>
+                </div>
+
+                <button onClick={() => navigate('/dashboard')} className="w-full py-4 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold hover:bg-slate-800 dark:hover:bg-gray-100 transition-colors shadow-lg flex items-center justify-center gap-2">
+                    <Home className="w-4 h-4" /> Go to Dashboard
+                </button>
+             </div>
+        </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-white relative pt-24 pb-12">
