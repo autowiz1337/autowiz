@@ -5,7 +5,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useNavigate } from 'react-router-dom';
 
-// Initialize Stripe with the provided Test Key
+// Initialize Stripe with the provided Test Key 
 const stripePromise = loadStripe('pk_test_51MActHIUPUeJt7pnEfcmUxZB08nYw1Q8Dj7PvsVzwmVbTFCQCTMMDMEXf95gbTAkXliikRpUgLV5iS165PdVCuZa00ZUXtw59w');
 
 interface PaidCheckoutProps {
@@ -270,7 +270,6 @@ const PaymentForm: React.FC<{ onSuccess: () => void; formData: FormDataType; ord
 
     if (cardElement) {
       try {
-        // 1. Create Payment Method via Stripe
         const { error, paymentMethod } = await stripe.createPaymentMethod({
           type: 'card',
           card: cardElement,
@@ -295,7 +294,7 @@ const PaymentForm: React.FC<{ onSuccess: () => void; formData: FormDataType; ord
                  timestamp: new Date().toISOString()
              };
 
-             // 2. Charge via Cloudflare Worker (Secure)
+             // 1. Charge via Cloudflare Worker (Secure)
              const response = await fetch('/api/charge', {
                  method: 'POST',
                  headers: { 'Content-Type': 'application/json' },
@@ -308,8 +307,7 @@ const PaymentForm: React.FC<{ onSuccess: () => void; formData: FormDataType; ord
                  throw new Error(result.error);
              }
 
-             // 3. Send Payment ID to External Webhook (n8n/CRM)
-             // This ensures the CRM gets the Transaction ID for matching.
+             // 2. Send Payment ID to External Webhook (n8n/CRM)
              try {
                  await fetch('https://app.autowizz.cfd/webhook/new-order', {
                     method: 'POST',
@@ -318,7 +316,7 @@ const PaymentForm: React.FC<{ onSuccess: () => void; formData: FormDataType; ord
                         ...formData,
                         product: 'pro_optimization',
                         stage: 'payment_complete',
-                        payment_id: result.id, // ID from Stripe/Cloudflare response
+                        payment_id: result.id, // Capture the ID from the charge response
                         timestamp: new Date().toISOString()
                     })
                  });
