@@ -114,3 +114,45 @@ The dashboard operates as a "stateless" viewer, hydrating entirely from external
 ## 5. Configuration
 To test the Invite flow, navigate to `/invite` in your browser.
 Legacy links (e.g., `?page=invite`) are automatically redirected to the new routes via the `LegacyRedirectHandler` in `App.tsx`.
+
+---
+
+## 6. Payment Configuration & Customization
+
+The payment system uses a hybrid architecture: the frontend handles the UI, while a Cloudflare Worker handles the secure Stripe transaction.
+
+### A. Updating Stripe Keys
+You have two keys to manage. **Never** put your Secret Key in the frontend code.
+
+1.  **Publishable Key (Frontend):**
+    *   **File:** `src/components/PaidCheckout.tsx`
+    *   **Location:** Look for line ~10: `const stripePromise = loadStripe('pk_test_...');`
+    *   **Action:** Replace this string with your live publishable key (`pk_live_...`).
+
+2.  **Secret Key (Backend):**
+    *   **Location:** Cloudflare Dashboard > Workers & Pages > Settings > Variables and Secrets.
+    *   **Action:** Add or Update the variable named `STRIPE_SECRET_KEY`.
+    *   **Value:** Your live secret key (`sk_live_...`).
+    *   **Note:** You must redeploy the project for this change to take effect.
+
+### B. Changing Price & Currency
+The amount charged is controlled securely on the server-side to prevent tampering.
+
+*   **File:** `functions/spa_worker.js`
+*   **Location:** Inside the `/api/charge` block.
+*   **Code to Modify:**
+    ```javascript
+    stripeData.append('amount', '49900'); // Amount in CENTS ($499.00)
+    stripeData.append('currency', 'usd'); // Currency Code
+    ```
+*   **Example:** To charge **€150.00**, change to `'15000'` and `'eur'`.
+
+### C. Customizing "Thank You" Messages
+After a successful payment, the component renders a success view.
+
+*   **File:** `src/components/PaidCheckout.tsx`
+*   **Location:** Search for `if (isSuccess)`.
+*   **Content:**
+    *   **Headline:** `<h2 ...>Order Confirmed!</h2>`
+    *   **Message:** The paragraph below it (`<p ...>`). You can customize the text thanking the user or giving them instructions.
+    *   **Next Steps:** The unordered list (`<ul ...>`) displaying "Check your inbox" etc.
