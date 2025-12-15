@@ -558,8 +558,9 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
           // Attempt to extract the 'id' from the webhook response
           try {
             const data = await response.json();
-            if (data && data.id) {
-                setOrderId(data.id);
+            // Check for 'Id' (PascalCase) or 'id' (camelCase) based on response structure
+            if (data && (data.Id || data.id)) {
+                setOrderId(data.Id || data.id);
             }
           } catch(e) {
             console.warn("Could not extract ID from webhook response", e);
