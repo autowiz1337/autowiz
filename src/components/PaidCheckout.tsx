@@ -309,6 +309,7 @@ const PaymentForm: React.FC<{ onSuccess: () => void; formData: FormDataType; ord
 
              // 2. Send Payment ID to External Webhook (n8n/CRM)
              try {
+                 console.log("Sending payload to webhook with ID:", orderId);
                  await fetch('https://app.autowizz.cfd/webhook/new-order', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -558,9 +559,21 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
           // Attempt to extract the 'id' from the webhook response
           try {
             const data = await response.json();
-            // Check for 'Id' (PascalCase) or 'id' (camelCase) based on response structure
-            if (data && (data.Id || data.id)) {
-                setOrderId(data.Id || data.id);
+            let extractedId = null;
+
+            // Handle Array response (common in n8n/webhooks)
+            if (Array.isArray(data) && data.length > 0) {
+                extractedId = data[0].Id || data[0].id;
+            } 
+            // Handle standard Object response
+            else if (data && typeof data === 'object') {
+                extractedId = data.Id || data.id;
+            }
+
+            if (extractedId) {
+                setOrderId(extractedId);
+            } else {
+                console.warn("Could not find 'Id' or 'id' in webhook response:", data);
             }
           } catch(e) {
             console.warn("Could not extract ID from webhook response", e);
