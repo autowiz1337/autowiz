@@ -5,7 +5,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useNavigate } from 'react-router-dom';
 
-// Initialize Stripe with the provided Test Key 
+// Initialize Stripe with the provided Test Key
 const stripePromise = loadStripe('pk_test_51MActHIUPUeJt7pnEfcmUxZB08nYw1Q8Dj7PvsVzwmVbTFCQCTMMDMEXf95gbTAkXliikRpUgLV5iS165PdVCuZa00ZUXtw59w');
 
 interface PaidCheckoutProps {
@@ -317,6 +317,7 @@ const PaymentForm: React.FC<{ onSuccess: () => void; formData: FormDataType; ord
                         product: 'pro_optimization',
                         stage: 'payment_complete',
                         payment_id: result.id, // Capture the ID from the charge response
+                        lead_id: orderId, // Pass the initial Lead ID for correlation
                         timestamp: new Date().toISOString()
                     })
                  });
@@ -554,7 +555,15 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
       });
 
       if (response.ok) {
-          // Success
+          // Attempt to extract the 'id' from the webhook response
+          try {
+            const data = await response.json();
+            if (data && data.id) {
+                setOrderId(data.id);
+            }
+          } catch(e) {
+            console.warn("Could not extract ID from webhook response", e);
+          }
       }
 
       setTimeout(() => {
