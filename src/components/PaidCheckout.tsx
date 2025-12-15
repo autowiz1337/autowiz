@@ -294,22 +294,24 @@ const PaymentForm: React.FC<{ onSuccess: () => void; formData: FormDataType; ord
                  timestamp: new Date().toISOString()
              };
 
-             // Include ID if captured in step 1 to trigger update instead of create
-             if (orderId) {
-                 payload.Id = orderId;
-             }
-
-             await fetch('https://app.autowizz.cfd/webhook/new-order', {
+             // Using internal Cloudflare Function instead of external webhook
+             const response = await fetch('/api/charge', {
                  method: 'POST',
                  headers: { 'Content-Type': 'application/json' },
                  body: JSON.stringify(payload)
              });
 
+             const result = await response.json();
+
+             if (result.error) {
+                 throw new Error(result.error);
+             }
+
              setProcessing(false);
              onSuccess();
         }
-      } catch (err) {
-         setError('An unexpected error occurred.');
+      } catch (err: any) {
+         setError(err.message || 'An unexpected error occurred during payment.');
          setProcessing(false);
       }
     }
@@ -521,7 +523,8 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('https://app.autowizz.cfd/webhook/new-order', {
+      // Replaced webhook with internal /api/lead call
+      const response = await fetch('/api/lead', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -532,17 +535,8 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
         }),
       });
 
-      // Capture database ID from response for subsequent update
       if (response.ok) {
-          try {
-              const data = await response.json();
-              if (Array.isArray(data) && data.length > 0 && data[0].Id) {
-                  setOrderId(data[0].Id);
-                  console.log("Order initiated with ID:", data[0].Id);
-              }
-          } catch (jsonError) {
-              console.warn("Could not parse Init response:", jsonError);
-          }
+          // Success
       }
 
       setTimeout(() => {
@@ -813,7 +807,7 @@ const PaidCheckout: React.FC<PaidCheckoutProps> = ({ onBack }) => {
                     <button 
                         type="submit"
                         disabled={isSubmitting}
-                        className="btn-primary btn-glow w-full py-5 rounded-xl text-xl font-bold text-white shadow-xl transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-2 mt-8 disabled:opacity-70"
+                        className="btn-primary w-full py-5 rounded-xl text-xl font-bold text-white shadow-xl transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-2 mt-8 disabled:opacity-70"
                     >
                         {isSubmitting ? (
                             <Loader2 className="w-6 h-6 animate-spin" />

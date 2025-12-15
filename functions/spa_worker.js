@@ -3,6 +3,77 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     
+    // --- API: LEAD CAPTURE (Step 1) ---
+    // Replaces n8n webhook for Step 1. Currently just returns success to allow flow to proceed.
+    if (url.pathname === '/api/lead' && request.method === 'POST') {
+        return new Response(JSON.stringify({ success: true, message: "Lead captured locally" }), {
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
+
+    // --- API: CHARGE CARD (Step 2) ---
+    // Handles Stripe PaymentIntent Creation & Confirmation
+    if (url.pathname === '/api/charge' && request.method === 'POST') {
+        const stripeKey = env.STRIPE_SECRET_KEY;
+        
+        if (!stripeKey) {
+            return new Response(JSON.stringify({ error: 'Server misconfigured: Missing Stripe Key' }), { 
+                status: 500,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+        
+        try {
+            const reqBody = await request.json();
+            const { payment_method_id, email, name } = reqBody;
+            
+            if (!payment_method_id) {
+                 return new Response(JSON.stringify({ error: 'Missing payment_method_id' }), { status: 400 });
+            }
+
+            // Construct form data for Stripe API (x-www-form-urlencoded)
+            const stripeData = new URLSearchParams();
+            stripeData.append('amount', '49900'); // $499.00
+            stripeData.append('currency', 'usd');
+            stripeData.append('payment_method', payment_method_id);
+            stripeData.append('confirm', 'true');
+            // Automatic payment methods configuration
+            stripeData.append('automatic_payment_methods[enabled]', 'true');
+            stripeData.append('automatic_payment_methods[allow_redirects]', 'never');
+            // Metadata & Receipts
+            stripeData.append('receipt_email', email);
+            if(name) stripeData.append('description', `Velocity AI Charge for ${name}`);
+
+            const stripeResponse = await fetch('https://api.stripe.com/v1/payment_intents', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${stripeKey}`,
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: stripeData
+            });
+            
+            const stripeJson = await stripeResponse.json();
+            
+            if (stripeJson.error) {
+                 return new Response(JSON.stringify({ error: stripeJson.error.message }), { 
+                     status: 400, 
+                     headers: { 'Content-Type': 'application/json' } 
+                 });
+            }
+            
+            return new Response(JSON.stringify({ success: true, id: stripeJson.id }), { 
+                headers: { 'Content-Type': 'application/json' } 
+            });
+
+        } catch (e) {
+            return new Response(JSON.stringify({ error: e.message || 'Internal Server Error' }), { 
+                status: 500, 
+                headers: { 'Content-Type': 'application/json' } 
+            });
+        }
+    }
+
     // --- API PROXY FOR R2 (CORS BYPASS) ---
     if (url.pathname === '/api/proxy-r2') {
       const id = url.searchParams.get('id');
