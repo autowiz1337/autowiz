@@ -68,7 +68,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack }) => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('https://app.autowizz.cfd/webhook/new-order', {
+      const response = await fetch('/api/lead', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -119,7 +119,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack }) => {
       <div className="fixed top-0 left-0 w-full h-16 bg-white dark:bg-[#0f172a] border-b border-slate-200 dark:border-white/10 z-50 flex flex-col justify-center shadow-sm">
         <div className="max-w-3xl mx-auto w-full px-6">
             <div className="flex justify-between items-end mb-2">
-                <span className="text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Application Progress</span>
+                <span className="text-xs font-bold text-slate-50 dark:text-gray-400 uppercase tracking-wider">Application Progress</span>
                 <span className="text-xs font-bold text-brand-600 dark:text-brand-400">90% Complete</span>
             </div>
             <div className="w-full h-2 bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">

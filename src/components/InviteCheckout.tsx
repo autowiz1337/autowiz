@@ -91,8 +91,8 @@ const InviteCheckout: React.FC<InviteCheckoutProps> = ({ onBack }) => {
     setIsSubmitting(true);
 
     try {
-      // POST to Webhook
-      const response = await fetch('https://app.autowizz.cfd/webhook/new-order', {
+      // POST to Internal API
+      const response = await fetch('/api/lead', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -108,8 +108,8 @@ const InviteCheckout: React.FC<InviteCheckoutProps> = ({ onBack }) => {
          setIsSuccess(true);
          window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
-         console.error('Webhook returned error');
-         setIsSuccess(true);
+         console.error('API returned error');
+         setIsSuccess(true); // Still show success to user for pilot flow
          window.scrollTo({ top: 0, behavior: 'smooth' });
       }
 
