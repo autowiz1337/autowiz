@@ -281,8 +281,8 @@ const Dashboard: React.FC = () => {
         )}
       </div>
 
-      {/* STICKY MARKET ALERT - MOVED TO TOP */}
-      <div className="sticky top-20 z-40 mb-6 -mx-4 md:-mx-6 lg:mx-auto max-w-6xl">
+      {/* MARKET ALERT - MOVED TO TOP (UNSTUCK) */}
+      <div className="mb-6 -mx-4 md:-mx-6 lg:mx-auto max-w-6xl">
           <div className="w-full bg-[#0f172a] border-y md:border border-slate-800 md:rounded-xl overflow-hidden flex items-center shadow-lg h-10 relative">
               <div className="bg-red-500/10 text-red-500 px-3 h-full flex items-center text-[10px] font-bold uppercase tracking-widest border-r border-red-500/20 z-10 flex-shrink-0">
                   <AlertCircle className="w-3 h-3 mr-2 animate-pulse" /> Market Alert
