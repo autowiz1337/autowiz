@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Target, ImageIcon, FileText, Save, Loader2, Check, ExternalLink, 
   Calendar, MapPin, User, Zap, CheckCircle2, Film, Download, Sparkles, Brain, Wand2, 
   Gauge, Copy, Lock, Share2, AlignLeft, Search, ShieldCheck, ScanEye, Pencil, Youtube,
-  AlertTriangle, RefreshCw, Home
+  AlertTriangle, RefreshCw, Home, TrendingUp, AlertCircle
 } from 'lucide-react';
 import { BackendReport, DashboardData } from '../types/Report';
 import { mapBackendReportToDashboard } from '../utils/reportMapper';
@@ -283,13 +283,106 @@ const Dashboard: React.FC = () => {
         )}
       </div>
 
-      {/* 
-         LAYOUT UPDATE: ONE COLUMN
-         Everything is now stacked vertically in a single max-width container (max-w-7xl for tighter layout).
-      */}
-      <div className="flex flex-col gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        {/* Sidebar Navigation - Unstuck */}
+        <div className="lg:col-span-2 hidden lg:block">
+          <div className="bg-white dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-white/10 p-4">
+            <div className="space-y-1">
+              {[
+                { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+                { id: 'strategy', label: 'AI Strategy', icon: Target },
+                { id: 'media', label: 'Media Assets', icon: ImageIcon },
+                { id: 'narrative', label: 'Narrative & Copy', icon: FileText },
+              ].map((item) => (
+                <button 
+                  key={item.id}
+                  onClick={() => {
+                    setActiveTab(item.id);
+                    setViewMode(item.id === 'overview' ? 'all' : item.id as any);
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
+                    activeTab === item.id 
+                      ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/30' 
+                      : 'text-slate-600 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-white/5'
+                  }`}
+                >
+                  <item.icon className="w-5 h-5" />
+                  {item.label}
+                </button>
+              ))}
+            </div>
+
+            {/* NEW OPTIMIZE BUTTON */}
+            <div className="mt-6">
+               <button 
+                  onClick={() => window.open('?page=checkout', '_blank')}
+                  className="btn-primary w-full relative rounded-xl px-4 py-3 text-sm font-bold text-white shadow-lg overflow-hidden transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-2 whitespace-nowrap"
+               >
+                  <Sparkles className="w-4 h-4" />
+                  Optimize New Listing
+               </button>
+            </div>
+
+            {/* WIDGETS */}
+            <div className="mt-8 space-y-4">
+               {/* Health Widget */}
+               <div className="bg-gradient-to-br from-slate-900 to-[#0f172a] rounded-xl p-4 border border-white/10 relative overflow-hidden">
+                  <div className="relative z-10 flex flex-col items-center">
+                      <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Listing Health</div>
+                      <div className="relative flex flex-col items-center justify-center mb-2">
+                         <ShieldCheck className="w-12 h-12 text-brand-500 drop-shadow-[0_0_10px_rgba(14,165,233,0.5)]" />
+                         <span className="text-3xl font-bold text-white leading-none mt-2">98</span>
+                      </div>
+                  </div>
+               </div>
+
+               {/* Visual IQ Widget */}
+               <div className="bg-gradient-to-br from-[#0f172a] to-slate-900 rounded-xl p-4 border border-white/10 relative overflow-hidden">
+                    <div className="relative z-10 flex flex-col items-center">
+                         <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Visual IQ</div>
+                         <div className="relative flex flex-col items-center justify-center mb-2">
+                             <ScanEye className="w-12 h-12 text-accent-purple drop-shadow-[0_0_10px_rgba(217,70,239,0.5)]" />
+                             <span className="text-3xl font-bold text-white leading-none mt-2">96</span>
+                         </div>
+                    </div>
+                </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content Area */}
+        <div className="lg:col-span-10 space-y-6">
           
-          {/* 1. TOP HEADER CARD */}
+          {/* Market Alert Ticker */}
+          <div className="w-full bg-[#0f172a] border border-slate-800 rounded-xl overflow-hidden flex items-center shadow-sm h-10 relative">
+              <div className="bg-red-500/10 text-red-500 px-3 h-full flex items-center text-[10px] font-bold uppercase tracking-widest border-r border-red-500/20 z-10 flex-shrink-0">
+                  <AlertCircle className="w-3 h-3 mr-2 animate-pulse" /> Market Alert
+              </div>
+              
+              <div className="flex-1 overflow-hidden relative h-full flex items-center bg-[#020617]">
+                  <div className="flex animate-scroll hover:[animation-play-state:paused] whitespace-nowrap items-center">
+                      <span className="mx-4 text-xs font-medium text-slate-400 flex items-center gap-1"><TrendingUp className="w-3 h-3 text-green-500" /> SUV Prices trending up 4.2% this week.</span>
+                      <span className="mx-4 text-xs font-medium text-slate-400 flex items-center gap-1"><AlertTriangle className="w-3 h-3 text-yellow-500" /> 3 Competitor listings detected in 5km radius.</span>
+                      <span className="mx-4 text-xs font-medium text-slate-400">📉 Diesel demand dropping slightly in urban sectors.</span>
+                      <span className="mx-4 text-xs font-medium text-slate-400">🔥 High turnover rate for 2021 models detected.</span>
+                      {/* Duplicate for seamless scroll */}
+                      <span className="mx-4 text-xs font-medium text-slate-400 flex items-center gap-1"><TrendingUp className="w-3 h-3 text-green-500" /> SUV Prices trending up 4.2% this week.</span>
+                      <span className="mx-4 text-xs font-medium text-slate-400 flex items-center gap-1"><AlertTriangle className="w-3 h-3 text-yellow-500" /> 3 Competitor listings detected in 5km radius.</span>
+                      <span className="mx-4 text-xs font-medium text-slate-400">📉 Diesel demand dropping slightly in urban sectors.</span>
+                      <span className="mx-4 text-xs font-medium text-slate-400">🔥 High turnover rate for 2021 models detected.</span>
+                  </div>
+              </div>
+
+              <button 
+                  onClick={() => window.open('https://www.carvertical.com', '_blank')}
+                  className="h-full px-4 bg-slate-800 hover:bg-slate-700 text-white text-[10px] font-bold uppercase tracking-wider transition-colors z-10 border-l border-slate-700 flex items-center gap-2 flex-shrink-0"
+              >
+                  Check History <ExternalLink className="w-3 h-3" />
+              </button>
+          </div>
+
+          {/* Top Header Card */}
           <div className="bg-white dark:bg-[#0f172a] p-6 md:p-8 rounded-3xl border border-slate-200 dark:border-white/10 shadow-sm relative overflow-hidden">
              <div className="absolute top-0 right-0 w-[400px] h-[300px] bg-brand-500/5 blur-[80px] rounded-full pointer-events-none" />
              
@@ -300,7 +393,7 @@ const Dashboard: React.FC = () => {
                         type="text"
                         value={editableTitle}
                         onChange={(e) => setEditableTitle(e.target.value)}
-                        className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight bg-transparent border-b border-transparent hover:border-slate-300 dark:hover:border-white/20 focus:border-brand-500 focus:outline-none transition-all w-full"
+                        className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight bg-transparent border-b border-transparent hover:border-slate-300 dark:hover:border-white/20 focus:border-brand-500 focus:outline-none transition-all w-full md:w-auto"
                     />
                     <span className="hidden md:flex px-3 py-1 rounded-full bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400 text-xs font-bold border border-green-200 dark:border-green-500/30 items-center gap-1.5 shadow-sm whitespace-nowrap">
                       <CheckCircle2 className="w-3.5 h-3.5" /> Optimized
@@ -310,6 +403,9 @@ const Dashboard: React.FC = () => {
                   <div className="flex flex-wrap items-center gap-6 text-sm text-slate-500 dark:text-gray-400 mt-3">
                     <span className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
                         <Calendar className="w-4 h-4 text-brand-500" /> {reportData.createdAt}
+                    </span>
+                    <span className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
+                        <MapPin className="w-4 h-4 text-brand-500" /> Bucharest
                     </span>
                     <a href={reportData.originalUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-brand-600 dark:text-brand-400 hover:underline px-3 py-1.5">
                         View Source <ExternalLink className="w-3 h-3" />
@@ -321,7 +417,7 @@ const Dashboard: React.FC = () => {
                    <button 
                     onClick={handleSave}
                     disabled={isSaving}
-                    className={`btn-primary w-full xl:w-auto px-6 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-all hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed ${saveSuccess ? 'bg-green-600 border-green-600 hover:bg-green-700' : ''}`}
+                    className="btn-primary w-full xl:w-auto px-6 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-all hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed"
                    >
                      {isSaving ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -330,7 +426,7 @@ const Dashboard: React.FC = () => {
                      ) : (
                         <Save className="w-4 h-4" /> 
                      )}
-                     {saveSuccess ? 'Saved to Browser!' : 'Save Changes'}
+                     {saveSuccess ? 'Saved!' : 'Save Changes'}
                    </button>
                 </div>
              </div>
@@ -346,7 +442,7 @@ const Dashboard: React.FC = () => {
                         <button
                             key={site.name}
                             onClick={() => window.open(site.url, '_blank')}
-                            className="group relative overflow-hidden rounded-xl px-5 py-2.5 text-xs font-bold transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center gap-2 bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/20 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 hover:border-indigo-300 dark:hover:border-indigo-500/40"
+                            className="group relative overflow-hidden rounded-xl px-6 py-2.5 text-sm font-bold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-600 bg-[length:200%_auto] animate-gradient-x"
                         >
                             <div className="relative z-10 flex items-center gap-2">
                                {site.name}
@@ -358,65 +454,10 @@ const Dashboard: React.FC = () => {
              </div>
           </div>
 
-          {/* 2. CONTROL BAR (INTEGRATED SIDEBAR) */}
-          <div className="bg-slate-50 dark:bg-[#0f172a]/50 border border-slate-200 dark:border-white/10 rounded-2xl p-2 sticky top-24 z-30 backdrop-blur-md shadow-md flex flex-col md:flex-row items-center justify-between gap-4">
-              
-              {/* Navigation Tabs */}
-              <div className="flex items-center gap-1 w-full md:w-auto overflow-x-auto no-scrollbar">
-                  {[
-                    { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-                    { id: 'strategy', label: 'AI Strategy', icon: Target },
-                    { id: 'media', label: 'Media Assets', icon: ImageIcon },
-                    { id: 'narrative', label: 'Narrative & Copy', icon: FileText },
-                  ].map((item) => (
-                    <button 
-                      key={item.id}
-                      onClick={() => {
-                        setActiveTab(item.id);
-                        setViewMode(item.id === 'overview' ? 'all' : item.id as any);
-                      }}
-                      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${
-                        activeTab === item.id 
-                          ? 'bg-white dark:bg-white/10 text-brand-600 dark:text-white shadow-sm ring-1 ring-slate-200 dark:ring-white/10' 
-                          : 'text-slate-500 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white'
-                      }`}
-                    >
-                      <item.icon className={`w-4 h-4 ${activeTab === item.id ? 'text-brand-500' : ''}`} />
-                      {item.label}
-                    </button>
-                  ))}
-              </div>
-
-              {/* Stats & Actions */}
-              <div className="flex items-center gap-3 w-full md:w-auto justify-end">
-                  {/* Health Badge */}
-                  <div className="hidden lg:flex items-center gap-2 px-3 py-2 bg-slate-200/50 dark:bg-white/5 rounded-lg border border-slate-200 dark:border-white/5">
-                      <ShieldCheck className="w-4 h-4 text-brand-500" />
-                      <span className="text-xs font-bold text-slate-700 dark:text-gray-300">Health: 98</span>
-                  </div>
-                  {/* IQ Badge */}
-                  <div className="hidden lg:flex items-center gap-2 px-3 py-2 bg-slate-200/50 dark:bg-white/5 rounded-lg border border-slate-200 dark:border-white/5">
-                      <ScanEye className="w-4 h-4 text-accent-purple" />
-                      <span className="text-xs font-bold text-slate-700 dark:text-gray-300">Visual IQ: 96</span>
-                  </div>
-
-                  <div className="h-6 w-px bg-slate-300 dark:bg-white/10 mx-1 hidden md:block"></div>
-
-                  <button 
-                      onClick={() => window.open('?page=checkout', '_blank')}
-                      className="flex items-center gap-2 px-4 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl text-sm font-bold hover:opacity-90 transition-opacity shadow-lg whitespace-nowrap"
-                  >
-                      <Sparkles className="w-4 h-4" />
-                      New Listing
-                  </button>
-              </div>
-          </div>
-
-          {/* 3. CONTENT SECTIONS */}
-          
-          {/* STRATEGY & INSIGHTS */}
+          {/* VIEW: STRATEGY & INSIGHTS */}
           {(viewMode === 'all' || viewMode === 'strategy') && (
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  
                   {/* Unified Strategy Card */}
                   <div className="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-3xl p-8 text-white relative overflow-hidden group shadow-2xl border border-indigo-500/20">
                       <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
@@ -491,7 +532,7 @@ const Dashboard: React.FC = () => {
               </div>
           )}
 
-          {/* MEDIA ASSETS */}
+          {/* VIEW: MEDIA ASSETS */}
           {(viewMode === 'all' || viewMode === 'media') && (
               <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                   
@@ -513,7 +554,7 @@ const Dashboard: React.FC = () => {
                            {/* Video Actions */}
                            <div className="flex flex-col md:flex-row items-center justify-center gap-4 mt-6">
                                <button 
-                                   onClick={() => copyToClipboard(`https://www.youtube.com/watch?v=${reportData.youtubeId}`, 'youtube')}
+                                   onClick={() => copyToClipboard(`https://youtu.be/${reportData.youtubeId}`, 'youtube')}
                                    className={`px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 shadow-lg transition-all ${
                                        copiedField === 'youtube' ? 'bg-green-600 text-white' : 'bg-red-600 hover:bg-red-500 text-white'
                                    }`}
@@ -525,7 +566,7 @@ const Dashboard: React.FC = () => {
                                {reportData.videoDownloadUrl && (
                                    <button 
                                        onClick={() => window.open(reportData.videoDownloadUrl, '_blank')}
-                                       className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg"
+                                       className="px-6 py-3 bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-900 dark:text-white rounded-xl font-bold text-sm flex items-center gap-2 transition-all"
                                    >
                                        <Download className="w-4 h-4" /> Download Raw MP4
                                    </button>
@@ -618,7 +659,7 @@ const Dashboard: React.FC = () => {
               </div>
           )}
 
-          {/* NARRATIVE & COPY */}
+          {/* VIEW: NARRATIVE & COPY */}
           {(viewMode === 'all' || viewMode === 'narrative') && (
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                   
@@ -647,18 +688,11 @@ const Dashboard: React.FC = () => {
                           </div>
                           
                           <div className="flex items-center gap-2">
-                            {/* Updated Secondary Save Button with Active State Feedback */}
                             <button 
                                 onClick={handleSave}
-                                disabled={isSaving}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all border ${
-                                    saveSuccess 
-                                    ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800' 
-                                    : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-white/10 border-slate-200 dark:border-white/10'
-                                }`}
+                                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors border border-slate-200 dark:border-white/10"
                             >
-                                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : saveSuccess ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
-                                {saveSuccess ? 'Saved' : 'Save Draft'}
+                                <Save className="w-4 h-4" /> Save Draft
                             </button>
 
                             <button 
@@ -699,6 +733,7 @@ const Dashboard: React.FC = () => {
               </div>
           )}
 
+        </div>
       </div>
     </div>
   );
