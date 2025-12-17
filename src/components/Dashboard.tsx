@@ -281,34 +281,41 @@ const Dashboard: React.FC = () => {
         )}
       </div>
 
-      {/* MARKET ALERT - MOVED TO TOP (UNSTUCK) */}
+      {/* MARKET ALERT - MOVED TO TOP (UNSTUCK) & CLICKABLE */}
       <div className="mb-6 -mx-4 md:-mx-6 lg:mx-auto max-w-6xl">
-          <div className="w-full bg-[#0f172a] border-y md:border border-slate-800 md:rounded-xl overflow-hidden flex items-center shadow-lg h-10 relative">
-              <div className="bg-red-500/10 text-red-500 px-3 h-full flex items-center text-[10px] font-bold uppercase tracking-widest border-r border-red-500/20 z-10 flex-shrink-0">
-                  <AlertCircle className="w-3 h-3 mr-2 animate-pulse" /> Market Alert
-              </div>
-              
-              <div className="flex-1 overflow-hidden relative h-full flex items-center bg-[#020617]">
-                  <div className="flex animate-scroll hover:[animation-play-state:paused] whitespace-nowrap items-center">
-                      <span className="mx-4 text-xs font-medium text-slate-400 flex items-center gap-1"><TrendingUp className="w-3 h-3 text-green-500" /> SUV Prices trending up 4.2% this week.</span>
-                      <span className="mx-4 text-xs font-medium text-slate-400 flex items-center gap-1"><AlertTriangle className="w-3 h-3 text-yellow-500" /> 3 Competitor listings detected in 5km radius.</span>
-                      <span className="mx-4 text-xs font-medium text-slate-400">📉 Diesel demand dropping slightly in urban sectors.</span>
-                      <span className="mx-4 text-xs font-medium text-slate-400">🔥 High turnover rate for 2021 models detected.</span>
-                      {/* Duplicate for seamless scroll */}
-                      <span className="mx-4 text-xs font-medium text-slate-400 flex items-center gap-1"><TrendingUp className="w-3 h-3 text-green-500" /> SUV Prices trending up 4.2% this week.</span>
-                      <span className="mx-4 text-xs font-medium text-slate-400 flex items-center gap-1"><AlertTriangle className="w-3 h-3 text-yellow-500" /> 3 Competitor listings detected in 5km radius.</span>
-                      <span className="mx-4 text-xs font-medium text-slate-400">📉 Diesel demand dropping slightly in urban sectors.</span>
-                      <span className="mx-4 text-xs font-medium text-slate-400">🔥 High turnover rate for 2021 models detected.</span>
+          <a 
+            href="https://www.carvertical.com" 
+            target="_blank" 
+            rel="noreferrer"
+            className="group block w-full bg-[#0f172a] border-y md:border border-slate-800 md:rounded-xl overflow-hidden shadow-lg h-10 relative cursor-pointer hover:border-red-500/50 transition-all duration-300"
+          >
+              <div className="flex items-center h-full">
+                  {/* Left Label */}
+                  <div className="bg-red-500/10 text-red-500 px-3 h-full flex items-center text-[10px] font-bold uppercase tracking-widest border-r border-red-500/20 z-10 flex-shrink-0 group-hover:bg-red-500/20 transition-colors">
+                      <AlertCircle className="w-3 h-3 mr-2 animate-pulse" /> Market Alert
+                  </div>
+                  
+                  {/* Ticker */}
+                  <div className="flex-1 overflow-hidden relative h-full flex items-center bg-[#020617] group-hover:bg-[#050b1d] transition-colors">
+                      <div className="flex animate-scroll hover:[animation-play-state:paused] whitespace-nowrap items-center">
+                          <span className="mx-4 text-xs font-medium text-slate-400 flex items-center gap-1 group-hover:text-slate-300"><TrendingUp className="w-3 h-3 text-green-500" /> SUV Prices trending up 4.2% this week.</span>
+                          <span className="mx-4 text-xs font-medium text-slate-400 flex items-center gap-1 group-hover:text-slate-300"><AlertTriangle className="w-3 h-3 text-yellow-500" /> 3 Competitor listings detected in 5km radius.</span>
+                          <span className="mx-4 text-xs font-medium text-slate-400 group-hover:text-slate-300">📉 Diesel demand dropping slightly in urban sectors.</span>
+                          <span className="mx-4 text-xs font-medium text-slate-400 group-hover:text-slate-300">🔥 High turnover rate for 2021 models detected.</span>
+                          {/* Duplicate for seamless scroll */}
+                          <span className="mx-4 text-xs font-medium text-slate-400 flex items-center gap-1 group-hover:text-slate-300"><TrendingUp className="w-3 h-3 text-green-500" /> SUV Prices trending up 4.2% this week.</span>
+                          <span className="mx-4 text-xs font-medium text-slate-400 flex items-center gap-1 group-hover:text-slate-300"><AlertTriangle className="w-3 h-3 text-yellow-500" /> 3 Competitor listings detected in 5km radius.</span>
+                          <span className="mx-4 text-xs font-medium text-slate-400 group-hover:text-slate-300">📉 Diesel demand dropping slightly in urban sectors.</span>
+                          <span className="mx-4 text-xs font-medium text-slate-400 group-hover:text-slate-300">🔥 High turnover rate for 2021 models detected.</span>
+                      </div>
+                  </div>
+
+                  {/* Right "Button" (Visual only, acting as CTA) */}
+                  <div className="h-full px-5 bg-red-600 group-hover:bg-red-500 text-white text-[11px] font-black uppercase tracking-widest z-10 flex items-center gap-2 flex-shrink-0 shadow-[0_0_20px_rgba(220,38,38,0.5)] group-hover:shadow-[0_0_30px_rgba(220,38,38,0.8)] transition-all">
+                      Check History <ExternalLink className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                   </div>
               </div>
-
-              <button 
-                  onClick={() => window.open('https://www.carvertical.com', '_blank')}
-                  className="h-full px-4 bg-slate-800 hover:bg-slate-700 text-white text-[10px] font-bold uppercase tracking-wider transition-colors z-10 border-l border-slate-700 flex items-center gap-2 flex-shrink-0"
-              >
-                  Check History <ExternalLink className="w-3 h-3" />
-              </button>
-          </div>
+          </a>
       </div>
 
       <div className="w-full space-y-8 max-w-6xl mx-auto">
