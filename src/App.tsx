@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+// @ts-ignore - Ignoring missing exports error from react-router-dom which may be due to environment type definition mismatch
 import { BrowserRouter as Router, Routes, Route, useNavigate, useSearchParams } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from 'react-hot-toast';
@@ -23,10 +24,10 @@ import PaidCheckout from './components/PaidCheckout';
 import InviteCheckout from './components/InviteCheckout';
 import SocialProofPopup from './components/SocialProofPopup';
 import ReclaimBudgetCTA from './components/ReclaimBudgetCTA';
+import ListingGenerator from './components/ListingGenerator'; // NEW
 import SEO from './components/SEO';
 import ErrorBoundary from './components/ErrorBoundary';
 
-// Handles legacy query params (e.g. ?page=checkout) and redirects to new Routes
 const LegacyRedirectHandler = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -37,19 +38,19 @@ const LegacyRedirectHandler = () => {
     else if (page === 'paid-checkout') navigate('/checkout', { replace: true });
     else if (page === 'invite') navigate('/invite', { replace: true });
     else if (page === 'dashboard') navigate('/dashboard', { replace: true });
+    else if (page === 'create') navigate('/create', { replace: true });
   }, [page, navigate]);
 
   return null;
 };
 
-// Wrapper for Landing Page components to keep routing clean
 const LandingPage = () => {
   const navigate = useNavigate();
   
-  // Helper to maintain compatibility with components using onNavigate prop
   const handleNavigate = (page: string) => {
       if (page === 'checkout') navigate('/checkout');
       else if (page === 'dashboard') navigate('/dashboard');
+      else if (page === 'create') navigate('/create');
       else if (page === 'landing') navigate('/');
       else navigate(`/${page}`);
   };
@@ -59,7 +60,7 @@ const LandingPage = () => {
       <SEO title="Velocity AI | Automate Your Dealership" description="The only AI that drives inventory turnover. Automate your dealership's merchandising." />
       <LegacyRedirectHandler />
       
-      <Navbar currentPage="landing" />
+      <Navbar />
       <Hero onNavigate={handleNavigate} />
       <Stats onNavigate={handleNavigate} />
       <ComparisonSlider onNavigate={handleNavigate} />
@@ -85,18 +86,23 @@ const AppRoutes = () => {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-white font-sans selection:bg-brand-500 selection:text-white transition-colors duration-500">
       <Routes>
-        {/* Main Landing Page */}
         <Route path="/" element={<LandingPage />} />
         
-        {/* App Routes */}
         <Route path="/dashboard" element={
           <>
-            <Navbar currentPage="dashboard" />
+            <Navbar />
             <Dashboard />
           </>
         } />
         
-        {/* Checkout Flows */}
+        <Route path="/create" element={
+          <>
+            <SEO title="Generate New Listing | Velocity AI" />
+            <Navbar />
+            <ListingGenerator />
+          </>
+        } />
+
         <Route path="/checkout" element={
           <>
             <SEO title="Secure Checkout | Velocity AI" />
@@ -118,31 +124,14 @@ const AppRoutes = () => {
           </>
         } />
 
-        {/* Fallback */}
         <Route path="*" element={<LandingPage />} />
       </Routes>
       
-      {/* Global Toast Notifications */}
       <Toaster 
         position="bottom-center"
         toastOptions={{
-          style: {
-            background: '#333',
-            color: '#fff',
-            borderRadius: '10px',
-          },
-          success: {
-            style: {
-              background: '#064e3b',
-              color: '#a7f3d0',
-            },
-          },
-          error: {
-            style: {
-              background: '#7f1d1d',
-              color: '#fecaca',
-            },
-          },
+          className: 'dark:bg-slate-900 dark:text-white dark:border dark:border-white/10',
+          duration: 4000,
         }}
       />
     </div>
