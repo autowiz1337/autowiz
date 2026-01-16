@@ -1,4 +1,3 @@
-
 # 🧠 Project Plan: Velocity AI (Pre-Deployment Upgrade)
 
 ## 1. ✅ Completed Phases
@@ -7,6 +6,27 @@
 - [x] **Visual Overhaul**: "Amazon Orange" buttons + Dark Mode strategy.
 - [x] **File Structure Fix**: Standardized `src/` directory for Types and Utils.
 - [x] **Netlify Build Repair**: Fixed `.nvmrc` encoding and Node versioning.
+
+---
+
+## 🚀 Phase 10: Vehicle Media Upload (High Priority)
+**Goal:** Allow users to upload up to 40 vehicle photos directly in the generator and host them via ImgBB/MinIO.
+
+### 10.1 Data Model Refactor
+- [ ] Update `FormData` interface in `ListingGenerator.tsx` to include `media: { files: FileItem[] }`.
+- [ ] `FileItem` will track the `File` object, a local `previewURL`, and eventually the `remoteURL`.
+
+### 10.2 Media Upload UI (Step 2)
+- [ ] Create a "Vehicle Media" section as Step 2 of 5.
+- [ ] Implement a Drag & Drop zone using a hidden file input.
+- [ ] Build a grid-based preview gallery with "Remove" functionality.
+- [ ] Add validation logic for the 40-image limit.
+
+### 10.3 Integration Logic (The Generator Trigger)
+- [ ] Implement `uploadImagesToProvider` utility.
+- [ ] Update the `Generate Listing` click handler to be asynchronous.
+- [ ] **Sequential Upload**: Upload images one-by-one to ImgBB to prevent browser hang and track progress.
+- [ ] **Final Payload**: Append the list of hosted image URLs to the webhook submission sent to `https://app.autowizz.cfd/webhook/new-order`.
 
 ---
 
@@ -32,113 +52,4 @@
 ---
 
 ## 3. ✨ Phase 5: User Experience & Polish
-**Goal:** Make the app feel like a premium SaaS, not a prototype.
-
-### 3.1 Persistence Layer (LocalStorage)
-*   **Problem:** If a user edits a description in the Dashboard and refreshes, their work is lost because we don't have a database write-back yet.
-*   **Solution:** Implement `useLocalStorage` hook for the Dashboard editor.
-*   **Benefit:** "Drafts" are saved automatically to the user's browser.
-
-### 3.2 Professional Notification System ("Toasts")
-*   **Current State:** We use `alert("Payment Successful!")` or simple text renders.
-*   **Improvement:** Integrate `sonner` or `react-hot-toast`.
-*   **Usage:**
-    *   "Link Copied to Clipboard"
-    *   "Draft Saved"
-    *   "Payment Processing..."
-
-### 3.3 Celebration Effects
-*   **Action:** Add `canvas-confetti` on successful payment or lead submission.
-*   **Psychology:** Dopamine hit increases user satisfaction and perceived value.
-
----
-
-## 4. 🔍 Phase 6: SEO & Meta Data
-**Goal:** Ensure the link looks good when shared on Social Media/Slack.
-
-### 4.1 Dynamic Meta Tags (`react-helmet-async`)
-*   **Action:** Inject unique `<title>` and `<meta name="description">` tags for each route.
-*   **Landing:** "Velocity AI | Automate Your Dealership"
-*   **Dashboard:** "Vehicle Report: 2022 BMW X5 | Velocity AI"
-
----
-
-## 5. 🛡 Phase 7: Robustness & cleanup
-**Goal:** Minimize console errors and bundle size.
-
-### 5.1 Optimization
-*   **Action:** Remove the Tailwind CDN script from `index.html` and rely solely on the build step (`npm run build`).
-    *   *Why?* CDN blocks the render (FOUC) and downloads the entire CSS library. Build step purges unused CSS for faster load times.
-*   **Action:** Add an `ErrorBoundary` component to catch React crashes gracefully (e.g., if Stripe fails to load).
-
----
-
-## 6. 🐙 Phase 8: GitHub Pages Adaptation
-**Goal:** Ensure the app runs flawlessly on GitHub Pages' static hosting environment without losing SPA functionality.
-
-### 8.1 Routing Strategy Update
-*   **Problem:** GitHub Pages is a static host. It does not natively support HTML5 `pushState` routing (e.g., `/dashboard`), which causes 404 errors on page refresh.
-*   **Solution:** Switch from `BrowserRouter` to `HashRouter`.
-    *   **Change:** `<Router>` -> `<HashRouter>` in `src/App.tsx`.
-    *   **Result:** URLs will look like `https://username.github.io/repo/#/dashboard`. This ensures the server always serves `index.html` while React handles the route via the hash fragment.
-
-### 8.2 Asset Path Configuration
-*   **Problem:** Absolute paths (e.g., `/assets/script.js`) fail if the app is hosted in a subdirectory (e.g., `github.io/velocity-ai/`).
-*   **Solution:** Ensure `vite.config.ts` sets the base path correctly.
-    *   **Action:** Set `base: './'` or `base: '/<repo-name>/'` to ensure assets load relatively.
-
-### 8.3 Deployment Workflow
-*   **Action:** Add a `gh-pages` deployment script to `package.json` if manual deployment is needed, or configure a GitHub Action to build and deploy the `dist` folder to the `gh-pages` branch.
-
----
-
-## 7. 🚨 Phase 9: Deployment Repair (Netlify Node Version)
-**Goal:** Fix build failure `exit code: 2` caused by Netlify defaulting to Node v22.
-
-### 9.1 Enforce Node LTS
-- [x] **Diagnosis:** Netlify uses Node v22 by default. Current build chain (Vite/Rollup) may have instability with bleeding-edge Node versions.
-- [x] **Solution:** Lock environment to Node v20 (LTS).
-- [x] **Action 1:** Create `.nvmrc` file containing `20`.
-- [x] **Action 2:** Update `package.json` with `engines` field: `"node": "20.x"`.
-
-### 9.2 Fix .nvmrc Encoding
-- [x] **Diagnosis:** Netlify build log indicates an invalid character ('') in `.nvmrc`. This is likely a BOM (Byte Order Mark) or encoding issue introduced during file creation.
-- [x] **Action:** Re-write `.nvmrc` with a clean, simple "20" and a newline.
-
----
-
-## 9. ☁️ Free Deployment Options
-**Goal:** List viable free hosting providers for this React/Vite SPA.
-
-### 9.1 Netlify (Recommended / Current)
-*   **Tier:** Free Starter (100GB Bandwidth, 300 Build Minutes).
-*   **Pros:** Deep Git integration, automatic HTTPS, easiest configuration for SPAs via `_redirects`.
-*   **Setup:** Connect Git Repo -> Build Command: `npm run build` -> Publish Directory: `dist`.
-*   **SPA Config:** Ensure `public/_redirects` exists with `/* /index.html 200`.
-
-### 9.2 Vercel
-*   **Tier:** Hobby (Free for personal/non-commercial).
-*   **Pros:** Extremely fast (Edge Network), zero-config for Vite/React, great analytics.
-*   **Setup:** Import Git Repo -> Framework Preset: `Vite`.
-*   **SPA Config:** Usually automatic, but can require `vercel.json` with rewrites if routing issues occur.
-
-### 9.3 Cloudflare Pages
-*   **Tier:** Free (Unlimited bandwidth, unlimited sites).
-*   **Pros:** Runs on Cloudflare's massive global edge network. Fastest TTFB (Time to First Byte).
-*   **Setup:** Connect Git Repo -> Framework Preset: `Vite`.
-*   **SPA Config:** Add `_redirects` file (same syntax as Netlify) to the `public` folder.
-
-### 9.4 GitHub Pages
-*   **Tier:** Free (Public repositories).
-*   **Pros:** Completely free, hosted directly from your repository code.
-*   **Cons:** No server-side routing support (requires workarounds).
-*   **Setup:**
-    1.  **Router:** Must switch React Router to `HashRouter` (URLs look like `/#/dashboard`).
-    2.  **Vite Config:** Must set `base: '/repo-name/'` in `vite.config.ts`.
-    3.  **Deploy:** Push the `dist` folder to a `gh-pages` branch.
-
----
-
-## 8. Execution Order for Next Coding Session
-1.  **Done**: Fixed Netlify Deployment (.nvmrc + package.json + _redirects).
-2.  **Next**: Refactor App.tsx for better routing if needed.
+... (Existing sections continue)

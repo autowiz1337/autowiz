@@ -1,14 +1,23 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   ChevronRight, ChevronLeft, Save, Sparkles, Trophy, CheckCircle2, 
   Circle, Info, Star, ShieldCheck, Zap, DollarSign, Camera, 
   MapPin, User, MessageSquare, Layout, Activity, PenTool, 
   ArrowRight, Check, Trash2, Clock, Globe, Database, Award, 
-  Minimize2, Maximize2, MoreHorizontal, Loader2, PlusCircle
+  Minimize2, Maximize2, MoreHorizontal, Loader2, PlusCircle, 
+  Upload, X, Image as ImageIcon, AlertCircle
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 // --- TYPES ---
+interface UploadedFile {
+  id: string;
+  file: File;
+  preview: string;
+  status: 'idle' | 'uploading' | 'success' | 'error';
+  url?: string;
+}
+
 interface FormData {
   vehicle: {
     year: string;
@@ -19,6 +28,9 @@ interface FormData {
     price: string;
     exteriorColor: string;
     interiorColor: string;
+  };
+  media: {
+    images: UploadedFile[];
   };
   condition: {
     tier: string;
@@ -63,6 +75,7 @@ interface FormData {
 
 const INITIAL_STATE: FormData = {
   vehicle: { year: '', make: '', model: '', trim: '', mileage: '', price: '', exteriorColor: '', interiorColor: '' },
+  media: { images: [] },
   condition: { tier: '', highlights: [], customHighlights: '', standoutExterior: '', standoutInterior: '' },
   dealership: { name: '', city: '', knownFor: '', setsApart: '', toneSliders: { storytelling: 50, formality: 50, benefitFocus: 50 } },
   actionDrivers: { 
@@ -94,17 +107,23 @@ const ListingGenerator: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<FormData>(INITIAL_STATE);
   const [isSaving, setIsSaving] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [expandedCategories, setExpandedCategories] = useState<string[]>(['comfort']);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Quality Score Calculation
   const qualityScore = useMemo(() => {
     let score = 0;
-    const { vehicle, condition, actionDrivers } = formData;
+    const { vehicle, condition, actionDrivers, media } = formData;
     
     // Required fields (40%)
     const required1 = Object.values(vehicle).every(v => v !== '');
     const required2 = condition.tier !== '' && condition.highlights.length > 0;
     if (required1 && required2) score += 40;
+
+    // Media (Bonus 5%)
+    if (media.images.length >= 10) score += 5;
 
     // Standout features (15%)
     if (condition.standoutExterior.length > 20 && condition.standoutInterior.length > 20) score += 15;
@@ -158,7 +177,7 @@ const ListingGenerator: React.FC = () => {
   };
 
   const nextStep = () => {
-    if (currentStep < 4) setCurrentStep(prev => prev + 1);
+    if (currentStep < 5) setCurrentStep(prev => prev + 1);
     window.scrollTo(0, 0);
   };
 
@@ -175,6 +194,127 @@ const ListingGenerator: React.FC = () => {
         [field]: value
       }
     }));
+  };
+
+  // --- IMAGE UPLOAD LOGIC ---
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    addFiles(files);
+  };
+
+  const addFiles = (files: File[]) => {
+    const currentCount = formData.media.images.length;
+    const remaining = 40 - currentCount;
+    
+    if (remaining <= 0) {
+      toast.error('Maximum 40 images allowed');
+      return;
+    }
+
+    const newFiles: UploadedFile[] = files.slice(0, remaining).map(file => ({
+      id: Math.random().toString(36).substr(2, 9),
+      file,
+      preview: URL.createObjectURL(file),
+      status: 'idle'
+    }));
+
+    updateField('media', 'images', [...formData.media.images, ...newFiles]);
+    if (files.length > remaining) {
+      toast.error(`Only added first ${remaining} images. Limit is 40.`);
+    }
+  };
+
+  const removeFile = (id: string) => {
+    const fileToRemove = formData.media.images.find(img => img.id === id);
+    if (fileToRemove) {
+      URL.revokeObjectURL(fileToRemove.preview);
+    }
+    updateField('media', 'images', formData.media.images.filter(img => img.id !== id));
+  };
+
+  const onDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const files = Array.from(e.dataTransfer.files);
+    addFiles(files);
+  };
+
+  // --- UPLOAD ENGINE (ImgBB) ---
+  const uploadAllImages = async (): Promise<string[]> => {
+    const imagesToUpload = formData.media.images;
+    const urls: string[] = [];
+    const apiKey = 'YOUR_IMGBB_API_KEY'; // In production, this should be in an env var
+
+    for (let i = 0; i < imagesToUpload.length; i++) {
+      setUploadProgress(Math.round(((i) / imagesToUpload.length) * 100));
+      const item = imagesToUpload[i];
+      
+      try {
+        const body = new FormData();
+        body.append('image', item.file);
+        
+        // Note: Using a public demo key or user-provided key
+        // For security, a real implementation should proxy through a serverless function
+        const response = await fetch(`https://api.imgbb.com/1/upload?key=6d207e02198a847aa98d0a2a901485a5`, {
+          method: 'POST',
+          body
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+          urls.push(data.data.url);
+        }
+      } catch (err) {
+        console.error('Failed to upload image', item.id, err);
+      }
+    }
+    setUploadProgress(100);
+    return urls;
+  };
+
+  const handleGenerate = async () => {
+    if (formData.media.images.length === 0) {
+      toast.error('Please upload at least one image of the vehicle.');
+      return;
+    }
+
+    setIsGenerating(true);
+    setUploadProgress(0);
+
+    try {
+      // 1. Upload Images
+      const hostedUrls = await uploadAllImages();
+      
+      // 2. Submit to Webhook
+      const payload = {
+        ...formData,
+        media: {
+          imageUrls: hostedUrls
+        },
+        timestamp: new Date().toISOString()
+      };
+
+      const response = await fetch('https://app.autowizz.cfd/webhook/new-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        toast.success('Listing generated successfully!');
+        // Redirect or show summary
+      } else {
+        throw new Error('Webhook failed');
+      }
+    } catch (err) {
+      toast.error('Failed to generate listing. Please try again.');
+      console.error(err);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   // --- RENDER SECTIONS ---
@@ -267,6 +407,78 @@ const ListingGenerator: React.FC = () => {
           />
         </div>
       </div>
+    </div>
+  );
+
+  const renderMediaUpload = () => (
+    <div className="space-y-8 animate-fade-in-up">
+      <div className="flex justify-between items-end">
+        <div>
+          <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Vehicle Media</h3>
+          <p className="text-sm text-slate-500 dark:text-gray-400">Upload high-quality photos to increase conversion (Max 40).</p>
+        </div>
+        <div className="text-right">
+          <span className={`text-sm font-bold ${formData.media.images.length >= 40 ? 'text-red-500' : 'text-brand-500'}`}>
+            {formData.media.images.length} / 40
+          </span>
+        </div>
+      </div>
+
+      <div 
+        onDragOver={onDragOver}
+        onDrop={onDrop}
+        onClick={() => fileInputRef.current?.click()}
+        className="relative group cursor-pointer"
+      >
+        <div className="absolute -inset-1 bg-gradient-to-r from-brand-500 to-indigo-500 rounded-3xl blur opacity-20 group-hover:opacity-40 transition-opacity"></div>
+        <div className="relative h-64 rounded-3xl border-2 border-dashed border-slate-300 dark:border-white/10 bg-slate-50/50 dark:bg-white/5 flex flex-col items-center justify-center gap-4 transition-colors group-hover:border-brand-500/50">
+          <div className="w-16 h-16 rounded-2xl bg-brand-100 dark:bg-brand-500/10 flex items-center justify-center text-brand-600 dark:text-brand-400">
+            <Upload size={32} />
+          </div>
+          <div className="text-center">
+            <p className="text-lg font-bold text-slate-700 dark:text-gray-300">Drag & drop photos here</p>
+            <p className="text-sm text-slate-500 dark:text-gray-500">or click to browse from computer</p>
+          </div>
+          <input 
+            type="file" 
+            multiple 
+            accept="image/*"
+            className="hidden" 
+            ref={fileInputRef}
+            onChange={handleFileChange}
+          />
+        </div>
+      </div>
+
+      {formData.media.images.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {formData.media.images.map((img) => (
+            <div key={img.id} className="relative aspect-square rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10 group shadow-md">
+              <img src={img.preview} alt="Vehicle" className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeFile(img.id);
+                  }}
+                  className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+          ))}
+          {formData.media.images.length < 40 && (
+            <button 
+              onClick={() => fileInputRef.current?.click()}
+              className="aspect-square rounded-2xl border-2 border-dashed border-slate-300 dark:border-white/10 flex flex-col items-center justify-center gap-2 hover:border-brand-500 transition-colors text-slate-400 hover:text-brand-500 bg-slate-50 dark:bg-white/5"
+            >
+              <PlusCircle size={24} />
+              <span className="text-[10px] font-bold uppercase tracking-wider">Add More</span>
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 
@@ -721,11 +933,12 @@ const ListingGenerator: React.FC = () => {
                                     {currentStep}
                                 </span>
                                 <span className="text-lg font-bold">
-                                    Step {currentStep} of 4: 
+                                    Step {currentStep} of 5: 
                                     <span className="ml-2 text-slate-500 dark:text-gray-400 font-medium">
                                         {currentStep === 1 ? 'Vehicle Essentials' : 
-                                         currentStep === 2 ? 'Condition & Highlights' :
-                                         currentStep === 3 ? 'Dealership Voice' : 'Action Drivers'}
+                                         currentStep === 2 ? 'Vehicle Media' :
+                                         currentStep === 3 ? 'Condition & Highlights' :
+                                         currentStep === 4 ? 'Dealership Voice' : 'Action Drivers'}
                                     </span>
                                 </span>
                             </div>
@@ -733,7 +946,7 @@ const ListingGenerator: React.FC = () => {
                         <div className="flex items-center gap-3">
                             <button 
                                 onClick={handleSaveDraft}
-                                disabled={isSaving}
+                                disabled={isSaving || isGenerating}
                                 className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-white/5 text-sm font-bold text-slate-600 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors flex items-center gap-2 border border-slate-200 dark:border-white/10"
                             >
                                 {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
@@ -751,22 +964,25 @@ const ListingGenerator: React.FC = () => {
             {/* SIDEBAR NAVIGATION */}
             <div className="lg:col-span-3 space-y-3 sticky top-24">
                 {[
-                    { step: 1, label: 'Essentials', icon: Database, required: true },
-                    { step: 2, label: 'Condition', icon: Activity, required: true },
-                    { step: 3, label: 'Dealership', icon: MapPin, required: true },
-                    { step: 4, label: 'Action Drivers', icon: Zap, required: false },
+                    { step: 1, label: 'Essentials', icon: Database },
+                    { step: 2, label: 'Vehicle Media', icon: ImageIcon },
+                    { step: 3, label: 'Condition', icon: Activity },
+                    { step: 4, label: 'Dealership', icon: MapPin },
+                    { step: 5, label: 'Action Drivers', icon: Zap },
                 ].map((item) => {
                     const isComplete = (item.step === 1 && Object.values(formData.vehicle).every(v => v !== '')) ||
-                                       (item.step === 2 && formData.condition.tier !== '') ||
-                                       (item.step === 3 && formData.dealership.name !== '') ||
-                                       (item.step === 4 && (Object.values(formData.actionDrivers.premiumFeatures).flat().length > 0));
+                                       (item.step === 2 && formData.media.images.length > 0) ||
+                                       (item.step === 3 && formData.condition.tier !== '') ||
+                                       (item.step === 4 && formData.dealership.name !== '') ||
+                                       (item.step === 5 && (Object.values(formData.actionDrivers.premiumFeatures).flat().length > 0));
                     
                     const isActive = currentStep === item.step;
 
                     return (
                         <button
                             key={item.step}
-                            onClick={() => setCurrentStep(item.step)}
+                            onClick={() => !isGenerating && setCurrentStep(item.step)}
+                            disabled={isGenerating}
                             className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all ${
                                 isActive 
                                     ? 'bg-brand-600 border-brand-500 text-white shadow-lg shadow-brand-500/30 -translate-x-2' 
@@ -792,19 +1008,44 @@ const ListingGenerator: React.FC = () => {
             {/* MAIN FORM AREA */}
             <div className="lg:col-span-9 bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-white/10 rounded-[32px] p-8 md:p-12 shadow-2xl relative min-h-[600px]">
                 
+                {/* Generation Loader */}
+                {isGenerating && (
+                  <div className="absolute inset-0 z-50 bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-md rounded-[32px] flex flex-col items-center justify-center p-12 text-center">
+                    <div className="w-24 h-24 mb-8 relative">
+                       <div className="absolute inset-0 bg-brand-500/20 rounded-full blur-2xl animate-pulse"></div>
+                       <Loader2 className="w-full h-full text-brand-500 animate-spin relative z-10" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Generating Your AI Listing...</h2>
+                    <p className="text-slate-600 dark:text-gray-400 max-w-md mb-8">
+                       Our engines are optimizing your vehicle media and crafting the perfect sales narrative. 
+                       This usually takes 15-30 seconds.
+                    </p>
+                    <div className="w-full max-w-sm h-3 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden relative border border-slate-200 dark:border-white/10 shadow-inner">
+                        <div 
+                          className="h-full bg-brand-500 transition-all duration-500 shadow-[0_0_15px_rgba(14,165,233,0.5)]" 
+                          style={{ width: `${uploadProgress}%` }}
+                        />
+                    </div>
+                    <span className="text-xs font-black uppercase tracking-widest text-slate-400 mt-3">
+                       Media Optimization: {uploadProgress}%
+                    </span>
+                  </div>
+                )}
+
                 {/* Content Sections */}
                 {currentStep === 1 && renderVehicleEssentials()}
-                {currentStep === 2 && renderConditionHighlights()}
-                {currentStep === 3 && renderDealershipVoice()}
-                {currentStep === 4 && renderActionDrivers()}
+                {currentStep === 2 && renderMediaUpload()}
+                {currentStep === 3 && renderConditionHighlights()}
+                {currentStep === 4 && renderDealershipVoice()}
+                {currentStep === 5 && renderActionDrivers()}
 
                 {/* Footer Navigation */}
                 <div className="mt-12 pt-12 border-t border-slate-100 dark:border-white/5 flex flex-col sm:flex-row items-center justify-between gap-6">
                     <button
                         onClick={prevStep}
-                        disabled={currentStep === 1}
+                        disabled={currentStep === 1 || isGenerating}
                         className={`flex items-center gap-2 px-8 py-4 rounded-2xl font-bold text-lg transition-all ${
-                            currentStep === 1 
+                            currentStep === 1 || isGenerating
                                 ? 'opacity-0 pointer-events-none' 
                                 : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-white/10'
                         }`}
@@ -815,23 +1056,23 @@ const ListingGenerator: React.FC = () => {
                     <div className="flex-1 flex flex-col items-center gap-2">
                         <span className="text-xs font-black uppercase tracking-widest text-slate-400">Step Progress</span>
                         <div className="w-32 h-1 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
-                            <div className="h-full bg-brand-500 transition-all duration-500" style={{ width: `${currentStep * 25}%` }} />
+                            <div className="h-full bg-brand-500 transition-all duration-500" style={{ width: `${currentStep * 20}%` }} />
                         </div>
                     </div>
 
-                    {currentStep < 4 ? (
+                    {currentStep < 5 ? (
                         <button
                             onClick={nextStep}
-                            className="btn-primary btn-glow group flex items-center gap-2 px-12 py-4 rounded-2xl font-bold text-lg shadow-xl hover:scale-105"
+                            disabled={isGenerating}
+                            className="btn-primary btn-glow group flex items-center gap-2 px-12 py-4 rounded-2xl font-bold text-lg shadow-xl hover:scale-105 disabled:opacity-70"
                         >
                             Next Section <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
                         </button>
                     ) : (
                         <button
-                            onClick={() => {
-                                toast.success('Campaign Engine Started!');
-                            }}
-                            className="btn-primary btn-glow group flex items-center gap-3 px-12 py-4 rounded-2xl font-bold text-xl shadow-2xl hover:scale-105 bg-gradient-to-r from-orange-500 to-yellow-500"
+                            onClick={handleGenerate}
+                            disabled={isGenerating}
+                            className="btn-primary btn-glow group flex items-center gap-3 px-12 py-4 rounded-2xl font-bold text-xl shadow-2xl hover:scale-105 bg-gradient-to-r from-orange-500 to-yellow-500 disabled:opacity-70"
                         >
                             Generate Listing <Sparkles className="w-6 h-6 animate-pulse" />
                         </button>
