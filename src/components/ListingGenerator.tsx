@@ -449,7 +449,7 @@ const ListingGenerator: React.FC = () => {
           </div>
           <div className="text-center">
             <p className="text-lg font-bold text-slate-700 dark:text-gray-300">Drag & drop photos here</p>
-            <p className="text-sm text-slate-500 dark:text-gray-500">or click to browse from computer</p>
+            <p className="text-sm text-slate-500 dark:text-gray-400">or click to browse from computer</p>
           </div>
           <input 
             type="file" 
@@ -499,13 +499,11 @@ const ListingGenerator: React.FC = () => {
       {/* Condition Tier */}
       <div className="space-y-4">
         <label className="text-sm font-bold text-slate-700 dark:text-gray-300 block">Condition Tier</label>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
             { id: 'new', label: 'New', icon: Sparkles, color: 'text-yellow-500' },
-            { id: 'premium', label: 'Premium', icon: Star, color: 'text-indigo-500' },
             { id: 'excellent', label: 'Excellent', icon: CheckCircle2, color: 'text-green-500' },
             { id: 'good', label: 'Good', icon: Circle, color: 'text-blue-500' },
-            { id: 'value', label: 'Value', icon: DollarSign, color: 'text-orange-500' },
           ].map((tier) => (
             <button
               key={tier.id}
