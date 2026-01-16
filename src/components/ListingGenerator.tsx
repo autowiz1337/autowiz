@@ -69,7 +69,6 @@ interface FormData {
     wowFactor: string;
     specialOffer: string;
     noSpecialOffer: boolean;
-    recentService: string;
   };
 }
 
@@ -82,7 +81,7 @@ const INITIAL_STATE: FormData = {
     urgencyTriggers: [], 
     premiumFeatures: { comfort: [], technology: [], safety: [], performance: [], appearance: [] }, 
     customSubFeatures: { comfort: '', technology: '', safety: '', performance: '', appearance: '' },
-    wowFactor: '', specialOffer: '', noSpecialOffer: false, recentService: '' 
+    wowFactor: '', specialOffer: '', noSpecialOffer: false
   },
 };
 
@@ -878,16 +877,6 @@ const ListingGenerator: React.FC = () => {
                             />
                         </div>
                     )}
-                </div>
-
-                <div className="space-y-3">
-                    <label className="text-sm font-bold text-slate-700 dark:text-gray-300 block">🔧 "We just completed..."</label>
-                    <input 
-                        className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:border-brand-500 outline-none"
-                        placeholder="e.g., a full 150-point inspection and certification"
-                        value={formData.actionDrivers.recentService}
-                        onChange={(e) => updateField('actionDrivers', 'recentService', e.target.value)}
-                    />
                 </div>
             </div>
         </div>
