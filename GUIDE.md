@@ -1,68 +1,60 @@
 # Velocity AI - Administrator Guide
 
 ## Overview
-Velocity AI is a comprehensive automotive listing optimization platform designed to automate and enhance vehicle merchandising.
+Velocity AI is a comprehensive automotive listing optimization platform designed to automate and enhance vehicle merchandising through AI-driven visual and narrative enhancement.
 
 ---
 
 ## 1. Landing Page Modules
-The landing page serves as the primary conversion funnel. It includes several high-performance modules.
+The landing page serves as the primary conversion funnel. It includes several high-performance modules:
+*   **Hero**: High-impact value proposition and direct URL entry.
+*   **Visual IQ Slider**: Interactive A/B comparison of raw vs. studio-enhanced photos.
+*   **Avatar Insights**: Visualizing the target persona logic.
+*   **Performance Comparison**: Statistical breakdown of AI vs. traditional processes.
 
 ---
 
-## 2. Dashboard Interface
-Accessed via the "Log in" button or automatically via a magic link.
+## 2. Dashboard Interface (`/dashboard`)
+The dashboard is the delivery mechanism for optimized assets.
 
 ### Key Functions
-*   **Listing Health**: A gamified widget showing a score (0-100) based on asset quality.
-*   **Narrative Editor**: Distraction-free text area to edit AI-generated descriptions.
+*   **Draft Persistence**: Edits made to descriptions or titles are auto-saved to local browser memory, allowing users to return to their work.
+*   **Asset Distribution**: One-click deep-linking to major regional listing platforms (Autovit, olx, etc.).
+*   **Media Gallery**: High-resolution studio renders with direct .ZIP download capability.
 
 ---
 
 ## 3. Listing Generator (`/create`)
-The campaign creation core. This multi-step form allows dealers to input vehicle data to feed the AI neural engine.
+The engine of the platform. A high-conversion, multi-step interface for data collection.
 
-### Data Flow
-1.  **Vehicle Essentials**: Basic VIN-level data (Year, Make, Model).
-2.  **Vehicle Media**: Users upload up to 40 photos. 
-3.  **Condition & Highlights**: Qualitative data and "Condition Tiers".
-4.  **Dealership Voice**: Branding and tone sliders.
-5.  **Action Drivers**: Urgency triggers and premium feature categorization.
+### Responsive Architecture
+*   **Desktop**: Features a sticky sidebar navigation for quick jumping between steps.
+*   **Mobile**: Sidebar is hidden to prioritize vertical real estate; a compact gamified header tracks quality and completion.
 
-### Media Handling & Hosted Assets
-Images uploaded in Step 2 are sent to **ImgBB** via their API.
-*   **Storage Duration**: Images are set to auto-delete after **12 hours** (`expiration=43200`) to manage storage and privacy for temporary processing assets.
-*   **Integration**: The `ListingGenerator` sequentially uploads each file and collects the resulting URLs to append to the final Webhook payload.
-*   **Configuration**: The API key is managed in `src/components/ListingGenerator.tsx` within the `uploadAllImages` function.
+### Data Flow Steps
+1.  **Essentials**: Core VIN-level data (Year, Make, Model, Price).
+2.  **Media**: Sequential upload interface for up to 40 images.
+3.  **Condition**: Qualitative condition tiers and standout feature narratives.
+4.  **Branding**: Calibration of dealership voice and tone sliders (Storytelling/Formality).
+5.  **Drivers**: High-intensity urgency triggers and premium feature selection.
 
-### Gamification (The Quality Engine)
-The form calculates a real-time **Quality Score** (0-100%):
-*   **40%**: Required Fields (Foundation)
-*   **15%**: Standout Exterior/Interior Narratives
-*   **15%**: 5+ Premium Features Selected
-*   **10%**: "Wow Factor" Description
-*   **10%**: Urgency Triggers
-*   **10%**: Special Offer / Service Detail
+### Media Handling & ImgBB Integration
+Images uploaded in Step 2 are processed through the **ImgBB API**.
+*   **Sequential Upload**: Images are uploaded one-by-one to ensure stable progress tracking and avoid browser memory spikes.
+*   **Auto-Deletion**: All temporary assets are set to auto-expire after **12 hours** (`expiration=43200`) to respect privacy and manage storage.
+*   **Configuration**: The API key is defined in `src/components/ListingGenerator.tsx` within the `uploadAllImages` constant.
 
 ---
 
-## 4. Checkout Flows
-The application supports three distinct checkout experiences based on user segment.
+## 4. Technical Architecture
 
-### A. Free Pilot (`/pilot`)
-Low-friction entry for free trials. Uses external webhook for data capture.
+### State Management
+The application utilizes a unified `FormData` interface with deep nesting to maintain structured data. Auto-save triggers every 5 seconds to ensure zero data loss during long sessions.
 
-### B. Paid Stripe Flow (`/checkout`)
-Main revenue driver. Integrates Stripe Elements via Cloudflare Worker proxy.
-
-### C. Invite-Only Flow (`/invite`)
-VIP/Beta access for pre-selected users. Skip payment, jump directly to generation.
-
----
-
-## 5. Technical Architecture
 ### Routing Strategy
-Powered by `react-router-dom`. Uses `LegacyRedirectHandler` to maintain compatibility with old query-string based links.
+Powered by `react-router-dom`. 
+*   Uses a `LegacyRedirectHandler` to ensure old marketing links (using `?page=`) still function by redirecting to the correct semantic path.
+*   **Production Deployment**: Requires a `_redirects` file (provided in `public/`) to handle SPA navigation on Cloudflare/Netlify.
 
-### Persistence
-The form uses **Session State Persistence**. Auto-save triggers every 5 seconds to prevent data loss within a browsing session.
+### Reliability & Quality Scoring
+The **Quality Engine** (0-100%) uses a weighted heuristic to encourage users to fill optional but high-value fields (like "Wow Factors" or "Special Offers"), which directly improves the final AI output quality.
