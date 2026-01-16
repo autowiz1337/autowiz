@@ -24,9 +24,16 @@ The campaign creation core. This multi-step form allows dealers to input vehicle
 
 ### Data Flow
 1.  **Vehicle Essentials**: Basic VIN-level data (Year, Make, Model).
-2.  **Condition & Highlights**: Qualitative data and "Condition Tiers".
-3.  **Dealership Voice**: Branding and tone sliders.
-4.  **Action Drivers**: Urgency triggers and premium feature categorization.
+2.  **Vehicle Media**: Users upload up to 40 photos. 
+3.  **Condition & Highlights**: Qualitative data and "Condition Tiers".
+4.  **Dealership Voice**: Branding and tone sliders.
+5.  **Action Drivers**: Urgency triggers and premium feature categorization.
+
+### Media Handling & Hosted Assets
+Images uploaded in Step 2 are sent to **ImgBB** via their API.
+*   **Storage Duration**: Images are set to auto-delete after **12 hours** (`expiration=43200`) to manage storage and privacy for temporary processing assets.
+*   **Integration**: The `ListingGenerator` sequentially uploads each file and collects the resulting URLs to append to the final Webhook payload.
+*   **Configuration**: The API key is managed in `src/components/ListingGenerator.tsx` within the `uploadAllImages` function.
 
 ### Gamification (The Quality Engine)
 The form calculates a real-time **Quality Score** (0-100%):

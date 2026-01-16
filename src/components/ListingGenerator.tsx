@@ -246,7 +246,15 @@ const ListingGenerator: React.FC = () => {
   const uploadAllImages = async (): Promise<string[]> => {
     const imagesToUpload = formData.media.images;
     const urls: string[] = [];
-    const apiKey = 'YOUR_IMGBB_API_KEY'; // In production, this should be in an env var
+    
+    /**
+     * IMGBB CONFIGURATION:
+     * 1. Add your API key below.
+     * 2. Expiration is set to 43200 seconds (12 hours).
+     */
+    // !!! SET YOUR API KEY HERE !!!
+    const IMGBB_API_KEY = '6d207e02198a847aa98d0a2a901485a5'; 
+    const EXPIRATION_SECONDS = 43200; // 12 Hours (12 * 60 * 60)
 
     for (let i = 0; i < imagesToUpload.length; i++) {
       setUploadProgress(Math.round(((i) / imagesToUpload.length) * 100));
@@ -256,16 +264,21 @@ const ListingGenerator: React.FC = () => {
         const body = new FormData();
         body.append('image', item.file);
         
-        // Note: Using a public demo key or user-provided key
-        // For security, a real implementation should proxy through a serverless function
-        const response = await fetch(`https://api.imgbb.com/1/upload?key=6d207e02198a847aa98d0a2a901485a5`, {
+        // Correct implementation per documentation:
+        // Expiration and Key passed as URL parameters
+        // Image binary passed in multipart/form-data body
+        const uploadUrl = `https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}&expiration=${EXPIRATION_SECONDS}`;
+        
+        const response = await fetch(uploadUrl, {
           method: 'POST',
           body
         });
         
         const data = await response.json();
-        if (data.success) {
+        if (data.success && data.data && data.data.url) {
           urls.push(data.data.url);
+        } else {
+          console.error('ImgBB API Error:', data);
         }
       } catch (err) {
         console.error('Failed to upload image', item.id, err);
@@ -285,7 +298,7 @@ const ListingGenerator: React.FC = () => {
     setUploadProgress(0);
 
     try {
-      // 1. Upload Images
+      // 1. Upload Images to ImgBB
       const hostedUrls = await uploadAllImages();
       
       // 2. Submit to Webhook
@@ -305,7 +318,6 @@ const ListingGenerator: React.FC = () => {
 
       if (response.ok) {
         toast.success('Listing generated successfully!');
-        // Redirect or show summary
       } else {
         throw new Error('Webhook failed');
       }
