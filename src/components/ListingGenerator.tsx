@@ -4,7 +4,7 @@ import {
   Circle, Info, Star, ShieldCheck, Zap, DollarSign, Camera, 
   MapPin, User, MessageSquare, Layout, Activity, PenTool, 
   ArrowRight, Check, Trash2, Clock, Globe, Database, Award, 
-  Minimize2, Maximize2, MoreHorizontal
+  Minimize2, Maximize2, MoreHorizontal, Loader2, PlusCircle
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -24,8 +24,6 @@ interface FormData {
     tier: string;
     highlights: string[];
     customHighlights: string;
-    primaryAppeal: string;
-    customAppeal: string;
     standoutExterior: string;
     standoutInterior: string;
   };
@@ -49,7 +47,13 @@ interface FormData {
       performance: string[];
       appearance: string[];
     };
-    customFeatures: string;
+    customSubFeatures: {
+      comfort: string;
+      technology: string;
+      safety: string;
+      performance: string;
+      appearance: string;
+    };
     wowFactor: string;
     specialOffer: string;
     noSpecialOffer: boolean;
@@ -59,12 +63,13 @@ interface FormData {
 
 const INITIAL_STATE: FormData = {
   vehicle: { year: '', make: '', model: '', trim: '', mileage: '', price: '', exteriorColor: '', interiorColor: '' },
-  condition: { tier: '', highlights: [], customHighlights: '', primaryAppeal: '', customAppeal: '', standoutExterior: '', standoutInterior: '' },
+  condition: { tier: '', highlights: [], customHighlights: '', standoutExterior: '', standoutInterior: '' },
   dealership: { name: '', city: '', knownFor: '', setsApart: '', toneSliders: { storytelling: 50, formality: 50, benefitFocus: 50 } },
   actionDrivers: { 
     urgencyTriggers: [], 
     premiumFeatures: { comfort: [], technology: [], safety: [], performance: [], appearance: [] }, 
-    customFeatures: '', wowFactor: '', specialOffer: '', noSpecialOffer: false, recentService: '' 
+    customSubFeatures: { comfort: '', technology: '', safety: '', performance: '', appearance: '' },
+    wowFactor: '', specialOffer: '', noSpecialOffer: false, recentService: '' 
   },
 };
 
@@ -89,7 +94,6 @@ const ListingGenerator: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<FormData>(INITIAL_STATE);
   const [isSaving, setIsSaving] = useState(false);
-  const [sessionDealership, setSessionDealership] = useState<any>(null);
   const [expandedCategories, setExpandedCategories] = useState<string[]>(['comfort']);
 
   // Quality Score Calculation
@@ -99,7 +103,7 @@ const ListingGenerator: React.FC = () => {
     
     // Required fields (40%)
     const required1 = Object.values(vehicle).every(v => v !== '');
-    const required2 = condition.tier !== '' && condition.primaryAppeal !== '';
+    const required2 = condition.tier !== '' && condition.highlights.length > 0;
     if (required1 && required2) score += 40;
 
     // Standout features (15%)
@@ -126,7 +130,6 @@ const ListingGenerator: React.FC = () => {
     const fields = [
       ...Object.values(formData.vehicle),
       formData.condition.tier,
-      formData.condition.primaryAppeal,
       formData.condition.standoutExterior,
       formData.condition.standoutInterior,
       formData.dealership.name,
@@ -141,7 +144,6 @@ const ListingGenerator: React.FC = () => {
   // Auto-save logic
   useEffect(() => {
     const interval = setInterval(() => {
-      // Simulate silent save to state
       console.log('Draft auto-saved to session state');
     }, 5000);
     return () => clearInterval(interval);
@@ -297,23 +299,23 @@ const ListingGenerator: React.FC = () => {
         </div>
       </div>
 
-      {/* Highlights */}
+      {/* Merged Highlights & Appeal */}
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-            <label className="text-sm font-bold text-slate-700 dark:text-gray-300">Quick Highlights</label>
-            <span className="text-[10px] font-bold text-slate-400">CHOOSE ALL THAT APPLY</span>
+            <label className="text-sm font-bold text-slate-700 dark:text-gray-300">Vehicle Highlights & Appeal</label>
+            <span className="text-[10px] font-bold text-slate-400">CHOOSE AS MANY AS APPLY</span>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {[
-            'Clean Carfax', 'Accident-free', 'One owner', 
-            'Low mileage for year', 'Well maintained', 'Recent service',
-            'Still under warranty', 'Fully loaded', 'Popular trim',
-            'New tires/brakes', 'CPO eligible', 'Rare color/config'
+            'Best price in market', 'Clean Carfax / 1 Owner', 'Accident-free history',
+            'Loaded with premium packs', 'Exceptionally low mileage', 'Perfect, like-new condition',
+            'Recent major service', 'Rare find config/color', 'Still under warranty',
+            'CPO eligible / Certified', 'New tires/brakes', 'Full maintenance records'
           ].map((h) => (
             <label key={h} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
               formData.condition.highlights.includes(h)
-                ? 'bg-green-50 dark:bg-green-900/20 border-green-500 dark:border-green-500/50 text-green-700 dark:text-green-400'
-                : 'bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-gray-400'
+                ? 'bg-brand-50 dark:bg-brand-900/20 border-brand-500 dark:border-brand-500/50 text-brand-700 dark:text-brand-300'
+                : 'bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-gray-400 hover:border-slate-300'
             }`}>
               <input 
                 type="checkbox"
@@ -325,7 +327,11 @@ const ListingGenerator: React.FC = () => {
                   updateField('condition', 'highlights', next);
                 }}
               />
-              {formData.condition.highlights.includes(h) ? <Check size={14} className="flex-shrink-0" /> : <div className="w-3.5 h-3.5 border border-slate-300 rounded" />}
+              <div className={`w-4 h-4 border rounded flex items-center justify-center transition-colors ${
+                formData.condition.highlights.includes(h) ? 'bg-brand-500 border-brand-500' : 'border-slate-300'
+              }`}>
+                {formData.condition.highlights.includes(h) && <Check size={12} className="text-white" />}
+              </div>
               <span className="text-xs font-medium">{h}</span>
             </label>
           ))}
@@ -337,37 +343,6 @@ const ListingGenerator: React.FC = () => {
           value={formData.condition.customHighlights}
           onChange={(e) => updateField('condition', 'customHighlights', e.target.value)}
         />
-      </div>
-
-      {/* Primary Appeal */}
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-            <label className="text-sm font-bold text-slate-700 dark:text-gray-300">Primary Appeal</label>
-            <span className={`text-[10px] font-bold ${formData.condition.primaryAppeal ? 'text-green-500' : 'text-orange-500'}`}>
-                {formData.condition.primaryAppeal ? 'YOU SELECTED 1/1 ✓' : 'YOU SELECTED 0/1'}
-            </span>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {[
-            'Best price/value in market', 'Exceptionally low mileage', 
-            'Loaded with premium features', 'Perfect condition, barely driven',
-            'Rare find (color/config/package)', 'Recent major service/upgrades',
-            'Clean history, single owner'
-          ].map((appeal) => (
-            <button
-              key={appeal}
-              type="button"
-              onClick={() => updateField('condition', 'primaryAppeal', appeal)}
-              className={`text-left p-3 rounded-xl border text-sm transition-all ${
-                formData.condition.primaryAppeal === appeal 
-                  ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300' 
-                  : 'border-slate-200 dark:border-white/10 text-slate-600 dark:text-gray-400 hover:border-slate-300'
-              }`}
-            >
-              {appeal}
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* Standout Features */}
@@ -583,35 +558,54 @@ const ListingGenerator: React.FC = () => {
                                 </button>
                                 
                                 {isExpanded && (
-                                    <div className="p-4 pt-0 border-t border-slate-100 dark:border-white/5 grid grid-cols-1 md:grid-cols-2 gap-2 animate-in fade-in slide-in-from-top-2">
-                                        <label className="col-span-full flex items-center gap-2 pb-2 mb-2 border-b border-slate-100 dark:border-white/5">
-                                            <input 
-                                                type="checkbox" 
-                                                className="w-3.5 h-3.5 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
-                                                checked={selectedCount === cat.features.length}
-                                                onChange={(e) => {
-                                                    const features = { ...formData.actionDrivers.premiumFeatures, [cat.id]: e.target.checked ? cat.features : [] };
-                                                    updateField('actionDrivers', 'premiumFeatures', features);
-                                                }}
-                                            />
-                                            <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Select All {cat.label}</span>
-                                        </label>
-                                        {cat.features.map(f => (
-                                            <label key={f} className="flex items-center gap-3 cursor-pointer group">
+                                    <div className="p-4 pt-0 border-t border-slate-100 dark:border-white/5 animate-in fade-in slide-in-from-top-2">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-4">
+                                            <label className="col-span-full flex items-center gap-2 pb-2 mb-2 border-b border-slate-100 dark:border-white/5">
                                                 <input 
-                                                    type="checkbox"
-                                                    className="w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
-                                                    checked={(formData.actionDrivers.premiumFeatures as any)[cat.id].includes(f)}
+                                                    type="checkbox" 
+                                                    className="w-3.5 h-3.5 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                                                    checked={selectedCount === cat.features.length}
                                                     onChange={(e) => {
-                                                        const current = (formData.actionDrivers.premiumFeatures as any)[cat.id];
-                                                        const next = e.target.checked ? [...current, f] : current.filter((x: string) => x !== f);
-                                                        const features = { ...formData.actionDrivers.premiumFeatures, [cat.id]: next };
+                                                        const features = { ...formData.actionDrivers.premiumFeatures, [cat.id]: e.target.checked ? cat.features : [] };
                                                         updateField('actionDrivers', 'premiumFeatures', features);
                                                     }}
                                                 />
-                                                <span className="text-xs text-slate-600 dark:text-gray-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">{f}</span>
+                                                <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Select All {cat.label}</span>
                                             </label>
-                                        ))}
+                                            {cat.features.map(f => (
+                                                <label key={f} className="flex items-center gap-3 cursor-pointer group">
+                                                    <input 
+                                                        type="checkbox"
+                                                        className="w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                                                        checked={(formData.actionDrivers.premiumFeatures as any)[cat.id].includes(f)}
+                                                        onChange={(e) => {
+                                                            const current = (formData.actionDrivers.premiumFeatures as any)[cat.id];
+                                                            const next = e.target.checked ? [...current, f] : current.filter((x: string) => x !== f);
+                                                            const features = { ...formData.actionDrivers.premiumFeatures, [cat.id]: next };
+                                                            updateField('actionDrivers', 'premiumFeatures', features);
+                                                        }}
+                                                    />
+                                                    <span className="text-xs text-slate-600 dark:text-gray-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">{f}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+
+                                        {/* CUSTOM FEATURE INPUT FOR SUBSECTION */}
+                                        <div className="mt-6 space-y-2 border-t border-slate-100 dark:border-white/5 pt-4">
+                                            <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase">
+                                                <PlusCircle size={12} />
+                                                Add other {cat.label.toLowerCase()}
+                                            </div>
+                                            <input 
+                                                className="w-full bg-slate-50 dark:bg-[#020617] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2 text-xs focus:border-brand-500 outline-none transition-all"
+                                                placeholder={`e.g., custom interior trim, specific tech add-ons...`}
+                                                value={(formData.actionDrivers.customSubFeatures as any)[cat.id]}
+                                                onChange={(e) => {
+                                                    const custom = { ...formData.actionDrivers.customSubFeatures, [cat.id]: e.target.value };
+                                                    updateField('actionDrivers', 'customSubFeatures', custom);
+                                                }}
+                                            />
+                                        </div>
                                     </div>
                                 )}
                             </div>
@@ -836,7 +830,6 @@ const ListingGenerator: React.FC = () => {
                         <button
                             onClick={() => {
                                 toast.success('Campaign Engine Started!');
-                                // Logic to trigger the listing generation (likely redirect to a loader)
                             }}
                             className="btn-primary btn-glow group flex items-center gap-3 px-12 py-4 rounded-2xl font-bold text-xl shadow-2xl hover:scale-105 bg-gradient-to-r from-orange-500 to-yellow-500"
                         >
@@ -850,10 +843,5 @@ const ListingGenerator: React.FC = () => {
     </div>
   );
 };
-
-// Simple animated loader/shimmer
-const Loader2 = ({ className }: { className?: string }) => (
-    <Activity className={`animate-spin ${className}`} />
-);
 
 export default ListingGenerator;
