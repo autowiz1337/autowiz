@@ -5,9 +5,11 @@ import {
   MapPin, User, MessageSquare, Layout, Activity, PenTool, 
   ArrowRight, Check, Trash2, Clock, Globe, Database, Award, 
   Minimize2, Maximize2, MoreHorizontal, Loader2, PlusCircle, 
-  Upload, X, Image as ImageIcon, AlertCircle
+  Upload, X, Image as ImageIcon, AlertCircle, Wand2, Search, Link as LinkIcon,
+  Brain
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { decodeVehicleIdentifier, DecodedVehicle } from '../services/vinService';
 
 // --- TYPES ---
 interface UploadedFile {
@@ -109,6 +111,12 @@ const ListingGenerator: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [expandedCategories, setExpandedCategories] = useState<string[]>(['comfort']);
+  
+  // Magic Start States
+  const [vehicleId, setVehicleId] = useState('');
+  const [isDecoding, setIsDecoding] = useState(false);
+  const [hasMagicStarted, setHasMagicStarted] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Quality Score Calculation
@@ -116,23 +124,24 @@ const ListingGenerator: React.FC = () => {
     let score = 0;
     const { vehicle, condition, actionDrivers, media } = formData;
     
-    // Required fields (40%)
-    const required1 = Object.values(vehicle).every(v => v !== '');
-    const required2 = condition.tier !== '' && condition.highlights.length > 0;
+    // Required fields (40%) - Trim is optional for the score
+    const { trim, ...requiredVehicleData } = vehicle;
+    const required1 = Object.values(requiredVehicleData).every(v => v !== '');
+    const required2 = condition.tier !== '';
     if (required1 && required2) score += 40;
 
     // Media (Bonus 5%)
     if (media.images.length >= 10) score += 5;
 
     // Standout features (15%)
-    if (condition.standoutExterior.length > 20 && condition.standoutInterior.length > 20) score += 15;
+    if (condition.standoutExterior.length > 10 && condition.standoutInterior.length > 10) score += 15;
 
     // Premium features (15%)
     const totalFeatures = Object.values(actionDrivers.premiumFeatures).flat().length;
     if (totalFeatures >= 5) score += 15;
 
     // Wow factor (10%)
-    if (actionDrivers.wowFactor.length > 15) score += 10;
+    if (actionDrivers.wowFactor.length > 10) score += 10;
 
     // Urgency triggers (10%)
     if (actionDrivers.urgencyTriggers.length > 0) score += 10;
@@ -146,14 +155,10 @@ const ListingGenerator: React.FC = () => {
   // Completion Percentage
   const completion = useMemo(() => {
     const fields = [
-      ...Object.values(formData.vehicle),
+      formData.vehicle.year, formData.vehicle.make, formData.vehicle.model,
+      formData.vehicle.mileage, formData.vehicle.price, 
       formData.condition.tier,
-      formData.condition.standoutExterior,
-      formData.condition.standoutInterior,
-      formData.dealership.name,
-      formData.dealership.city,
-      formData.dealership.knownFor,
-      formData.dealership.setsApart
+      formData.dealership.name, formData.dealership.city
     ];
     const filled = fields.filter(f => f && f !== '').length;
     return Math.round((filled / fields.length) * 100);
@@ -167,6 +172,43 @@ const ListingGenerator: React.FC = () => {
     return () => clearInterval(interval);
   }, [formData]);
 
+  const handleMagicStart = async () => {
+    if (!vehicleId || vehicleId.length < 8) {
+      toast.error('Please enter a valid VIN or URL');
+      return;
+    }
+
+    setIsDecoding(true);
+    try {
+      const decoded = await decodeVehicleIdentifier(vehicleId);
+      
+      setFormData(prev => ({
+        ...prev,
+        vehicle: {
+          ...prev.vehicle,
+          year: decoded.year,
+          make: decoded.make,
+          model: decoded.model,
+          trim: decoded.trim,
+          exteriorColor: decoded.exteriorColor,
+          interiorColor: decoded.interiorColor,
+          mileage: decoded.mileage || prev.vehicle.mileage,
+          price: decoded.price || prev.vehicle.price,
+        }
+      }));
+      
+      setHasMagicStarted(true);
+      toast.success('Vehicle intelligence loaded! Verify the details below.', {
+        icon: '✨',
+        duration: 4000
+      });
+    } catch (err) {
+      toast.error('Could not decode. Please enter details manually.');
+    } finally {
+      setIsDecoding(false);
+    }
+  };
+
   const handleSaveDraft = () => {
     setIsSaving(true);
     setTimeout(() => {
@@ -177,12 +219,12 @@ const ListingGenerator: React.FC = () => {
 
   const nextStep = () => {
     if (currentStep < 5) setCurrentStep(prev => prev + 1);
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const prevStep = () => {
     if (currentStep > 1) setCurrentStep(prev => prev - 1);
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const updateField = (section: keyof FormData, field: string, value: any) => {
@@ -241,19 +283,11 @@ const ListingGenerator: React.FC = () => {
     addFiles(files);
   };
 
-  // --- UPLOAD ENGINE (ImgBB) ---
   const uploadAllImages = async (): Promise<string[]> => {
     const imagesToUpload = formData.media.images;
     const urls: string[] = [];
-    
-    /**
-     * IMGBB CONFIGURATION:
-     * 1. Add your API key below.
-     * 2. Expiration is set to 43200 seconds (12 hours).
-     */
-    // !!! SET YOUR API KEY HERE !!!
     const IMGBB_API_KEY = '6d207e02198a847aa98d0a2a901485a5'; 
-    const EXPIRATION_SECONDS = 43200; // 12 Hours (12 * 60 * 60)
+    const EXPIRATION_SECONDS = 43200; 
 
     for (let i = 0; i < imagesToUpload.length; i++) {
       setUploadProgress(Math.round(((i) / imagesToUpload.length) * 100));
@@ -262,22 +296,11 @@ const ListingGenerator: React.FC = () => {
       try {
         const body = new FormData();
         body.append('image', item.file);
-        
-        // Correct implementation per documentation:
-        // Expiration and Key passed as URL parameters
-        // Image binary passed in multipart/form-data body
         const uploadUrl = `https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}&expiration=${EXPIRATION_SECONDS}`;
-        
-        const response = await fetch(uploadUrl, {
-          method: 'POST',
-          body
-        });
-        
+        const response = await fetch(uploadUrl, { method: 'POST', body });
         const data = await response.json();
         if (data.success && data.data && data.data.url) {
           urls.push(data.data.url);
-        } else {
-          console.error('ImgBB API Error:', data);
         }
       } catch (err) {
         console.error('Failed to upload image', item.id, err);
@@ -297,33 +320,21 @@ const ListingGenerator: React.FC = () => {
     setUploadProgress(0);
 
     try {
-      // 1. Upload Images to ImgBB
       const hostedUrls = await uploadAllImages();
-      
-      // 2. Submit to Webhook
-      const payload = {
-        ...formData,
-        media: {
-          imageUrls: hostedUrls
-        },
-        timestamp: new Date().toISOString()
-      };
-
+      const payload = { ...formData, media: { imageUrls: hostedUrls }, timestamp: new Date().toISOString() };
       const response = await fetch('https://app.autowizz.cfd/webhook/new-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-
       if (response.ok) {
         toast.success('Listing generated successfully!');
-      } else {
-        throw new Error('Webhook failed');
+        // Small delay before potential redirect
+        setTimeout(() => setIsGenerating(false), 2000);
       }
+      else throw new Error('Webhook failed');
     } catch (err) {
       toast.error('Failed to generate listing. Please try again.');
-      console.error(err);
-    } finally {
       setIsGenerating(false);
     }
   };
@@ -331,91 +342,150 @@ const ListingGenerator: React.FC = () => {
   // --- RENDER SECTIONS ---
 
   const renderVehicleEssentials = () => (
-    <div className="space-y-6 animate-fade-in-up">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <label className="text-sm font-bold text-slate-700 dark:text-gray-300">Year</label>
-          <input 
-            type="number" min="1900" max="2026"
-            className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none transition-all"
-            placeholder="e.g., 2024"
-            value={formData.vehicle.year}
-            onChange={(e) => updateField('vehicle', 'year', e.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-bold text-slate-700 dark:text-gray-300">Make</label>
-          <input 
-            className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-brand-500 outline-none transition-all"
-            placeholder="e.g., BMW"
-            value={formData.vehicle.make}
-            onChange={(e) => updateField('vehicle', 'make', e.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-bold text-slate-700 dark:text-gray-300">Model</label>
-          <input 
-            className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-brand-500 outline-none transition-all"
-            placeholder="e.g., X5"
-            value={formData.vehicle.model}
-            onChange={(e) => updateField('vehicle', 'model', e.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-bold text-slate-700 dark:text-gray-300">Trim / Package</label>
-          <input 
-            className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-brand-500 outline-none transition-all"
-            placeholder="e.g., M Sport"
-            value={formData.vehicle.trim}
-            onChange={(e) => updateField('vehicle', 'trim', e.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-bold text-slate-700 dark:text-gray-300">Mileage</label>
-          <div className="relative">
-            <input 
-              type="text"
-              className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-brand-500 outline-none transition-all"
-              placeholder="e.g., 45,000"
-              value={formatCurrency(formData.vehicle.mileage)}
-              onChange={(e) => updateField('vehicle', 'mileage', e.target.value.replace(/\D/g, ''))}
-            />
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">MILES</span>
-          </div>
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-bold text-slate-700 dark:text-gray-300">Asking Price</label>
-          <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-500 font-bold">$</span>
-            <input 
-              type="text"
-              className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl pl-8 pr-4 py-3 focus:border-brand-500 outline-none transition-all font-bold"
-              placeholder="0.00"
-              value={formatCurrency(formData.vehicle.price)}
-              onChange={(e) => updateField('vehicle', 'price', e.target.value.replace(/\D/g, ''))}
-            />
-          </div>
-        </div>
+    <div className="space-y-10 animate-fade-in-up">
+      {/* Magic Start Section */}
+      <div className="relative p-8 rounded-[32px] border-2 border-brand-500/30 bg-brand-50/30 dark:bg-brand-500/5 shadow-2xl overflow-hidden group">
+         <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+            <Zap size={120} className="text-brand-500" />
+         </div>
+         
+         <div className="relative z-10 flex flex-col items-center text-center max-w-xl mx-auto">
+            <div className="w-16 h-16 rounded-2xl bg-brand-500 text-white flex items-center justify-center mb-6 shadow-xl shadow-brand-500/20">
+                <Sparkles size={32} />
+            </div>
+            <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2 tracking-tight">The Magic Start</h3>
+            <p className="text-slate-600 dark:text-gray-400 mb-8 leading-relaxed">
+               Paste a <strong>VIN</strong> or an <strong>Inventory URL</strong>. 
+               Our AI will scan the source and auto-populate all technical specs for you.
+            </p>
+
+            <div className="w-full relative">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                   <LinkIcon size={20} />
+                </div>
+                <input 
+                    type="text" 
+                    placeholder="Enter VIN or https://..."
+                    className="w-full bg-white dark:bg-[#020617] border-2 border-slate-200 dark:border-white/10 rounded-2xl pl-12 pr-4 py-5 text-lg font-bold focus:border-brand-500 outline-none transition-all shadow-inner"
+                    value={vehicleId}
+                    onChange={(e) => setVehicleId(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleMagicStart()}
+                />
+                <button 
+                    onClick={handleMagicStart}
+                    disabled={isDecoding || vehicleId.length < 8}
+                    className="absolute right-2 top-2 bottom-2 px-6 bg-brand-500 hover:bg-brand-600 text-white rounded-xl font-black text-sm uppercase tracking-widest shadow-lg transition-all disabled:opacity-50 disabled:grayscale flex items-center gap-2"
+                >
+                    {isDecoding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+                    Scan
+                </button>
+            </div>
+            
+            {isDecoding && (
+               <div className="mt-4 flex items-center gap-3 animate-pulse">
+                  <div className="flex gap-1">
+                     <div className="w-1.5 h-1.5 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                     <div className="w-1.5 h-1.5 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '200ms' }} />
+                     <div className="w-1.5 h-1.5 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '400ms' }} />
+                  </div>
+                  <span className="text-xs font-bold text-brand-600 dark:text-brand-400 uppercase tracking-widest">Decoding Vehicle Intel...</span>
+               </div>
+            )}
+         </div>
       </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-100 dark:border-white/5">
-        <div className="space-y-2">
-          <label className="text-sm font-bold text-slate-700 dark:text-gray-300">Exterior Color</label>
-          <input 
-            className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-brand-500 outline-none transition-all"
-            placeholder="e.g., Pearl White"
-            value={formData.vehicle.exteriorColor}
-            onChange={(e) => updateField('vehicle', 'exteriorColor', e.target.value)}
-          />
+
+      {/* Verification Grid */}
+      <div className={`space-y-6 transition-all duration-700 ${hasMagicStarted ? 'opacity-100' : 'opacity-40'}`}>
+        <div className="flex items-center gap-3 mb-4">
+            <div className="w-1 h-8 bg-brand-500 rounded-full" />
+            <h4 className="text-lg font-bold text-slate-900 dark:text-white uppercase tracking-tight">Verify Technical Specs</h4>
         </div>
-        <div className="space-y-2">
-          <label className="text-sm font-bold text-slate-700 dark:text-gray-300">Interior Color / Material</label>
-          <input 
-            className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-brand-500 outline-none transition-all"
-            placeholder="e.g., Black Leather"
-            value={formData.vehicle.interiorColor}
-            onChange={(e) => updateField('vehicle', 'interiorColor', e.target.value)}
-          />
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+            <label className="text-sm font-bold text-slate-700 dark:text-gray-300">Year</label>
+            <input 
+                type="number" min="1900" max="2026"
+                className="w-full bg-white dark:bg-[#020617] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-brand-500 outline-none transition-all"
+                placeholder="e.g., 2024"
+                value={formData.vehicle.year}
+                onChange={(e) => updateField('vehicle', 'year', e.target.value)}
+            />
+            </div>
+            <div className="space-y-2">
+            <label className="text-sm font-bold text-slate-700 dark:text-gray-300">Make</label>
+            <input 
+                className="w-full bg-white dark:bg-[#020617] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-brand-500 outline-none transition-all"
+                placeholder="e.g., BMW"
+                value={formData.vehicle.make}
+                onChange={(e) => updateField('vehicle', 'make', e.target.value)}
+            />
+            </div>
+            <div className="space-y-2">
+            <label className="text-sm font-bold text-slate-700 dark:text-gray-300">Model</label>
+            <input 
+                className="w-full bg-white dark:bg-[#020617] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-brand-500 outline-none transition-all"
+                placeholder="e.g., X5"
+                value={formData.vehicle.model}
+                onChange={(e) => updateField('vehicle', 'model', e.target.value)}
+            />
+            </div>
+            <div className="space-y-2">
+            <label className="text-sm font-bold text-slate-700 dark:text-gray-300">Trim / Package</label>
+            <input 
+                className="w-full bg-white dark:bg-[#020617] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-brand-500 outline-none transition-all"
+                placeholder="e.g., M Sport"
+                value={formData.vehicle.trim}
+                onChange={(e) => updateField('vehicle', 'trim', e.target.value)}
+            />
+            </div>
+            <div className="space-y-2">
+            <label className="text-sm font-bold text-slate-700 dark:text-gray-300">Mileage</label>
+            <div className="relative">
+                <input 
+                type="text"
+                className="w-full bg-white dark:bg-[#020617] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-brand-500 outline-none transition-all"
+                placeholder="e.g., 45,000"
+                value={formatCurrency(formData.vehicle.mileage)}
+                onChange={(e) => updateField('vehicle', 'mileage', e.target.value.replace(/\D/g, ''))}
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">MILES</span>
+            </div>
+            </div>
+            <div className="space-y-2">
+            <label className="text-sm font-bold text-slate-700 dark:text-gray-300">Asking Price</label>
+            <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-500 font-bold">$</span>
+                <input 
+                type="text"
+                className="w-full bg-white dark:bg-[#020617] border border-slate-200 dark:border-white/10 rounded-xl pl-8 pr-4 py-3 focus:border-brand-500 outline-none transition-all font-bold"
+                placeholder="0.00"
+                value={formatCurrency(formData.vehicle.price)}
+                onChange={(e) => updateField('vehicle', 'price', e.target.value.replace(/\D/g, ''))}
+                />
+            </div>
+            </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-100 dark:border-white/5">
+            <div className="space-y-2">
+            <label className="text-sm font-bold text-slate-700 dark:text-gray-300">Exterior Color</label>
+            <input 
+                className="w-full bg-white dark:bg-[#020617] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-brand-500 outline-none transition-all"
+                placeholder="e.g., Pearl White"
+                value={formData.vehicle.exteriorColor}
+                onChange={(e) => updateField('vehicle', 'exteriorColor', e.target.value)}
+            />
+            </div>
+            <div className="space-y-2">
+            <label className="text-sm font-bold text-slate-700 dark:text-gray-300">Interior Color / Material</label>
+            <input 
+                className="w-full bg-white dark:bg-[#020617] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-brand-500 outline-none transition-all"
+                placeholder="e.g., Black Leather"
+                value={formData.vehicle.interiorColor}
+                onChange={(e) => updateField('vehicle', 'interiorColor', e.target.value)}
+            />
+            </div>
         </div>
       </div>
     </div>
@@ -495,104 +565,113 @@ const ListingGenerator: React.FC = () => {
 
   const renderConditionHighlights = () => (
     <div className="space-y-8 animate-fade-in-up">
-      {/* Condition Tier */}
-      <div className="space-y-4">
-        <label className="text-sm font-bold text-slate-700 dark:text-gray-300 block">Condition Tier</label>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Visual Condition Toggles */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+            <div className="w-1 h-8 bg-brand-500 rounded-full" />
+            <h4 className="text-lg font-bold text-slate-900 dark:text-white uppercase tracking-tight">Anticipated Condition</h4>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           {[
-            { id: 'new', label: 'New', icon: Sparkles, color: 'text-yellow-500' },
-            { id: 'excellent', label: 'Excellent', icon: CheckCircle2, color: 'text-green-500' },
-            { id: 'good', label: 'Good', icon: Circle, color: 'text-blue-500' },
+            { id: 'new', label: 'Factory New', icon: Sparkles, color: 'text-yellow-400', desc: '0-50 miles' },
+            { id: 'premium', label: 'Premium', icon: Award, color: 'text-purple-500', desc: 'Like new' },
+            { id: 'excellent', label: 'Excellent', icon: CheckCircle2, color: 'text-green-500', desc: 'Clean history' },
+            { id: 'good', label: 'Good Vibe', icon: Circle, color: 'text-blue-500', desc: 'Solid driver' },
+            { id: 'value', label: 'Value Plus', icon: DollarSign, color: 'text-orange-500', desc: 'Priced to go' },
           ].map((tier) => (
             <button
               key={tier.id}
               onClick={() => updateField('condition', 'tier', tier.id)}
-              className={`flex flex-col items-center gap-3 p-4 rounded-2xl border transition-all ${
+              className={`flex flex-col items-center justify-center gap-3 p-6 rounded-3xl border-2 transition-all duration-300 group ${
                 formData.condition.tier === tier.id 
-                  ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/20 scale-[1.02] shadow-lg' 
-                  : 'border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 opacity-70 hover:opacity-100'
+                  ? 'border-brand-500 bg-brand-50 dark:bg-brand-500/10 scale-[1.05] shadow-[0_0_30px_rgba(14,165,233,0.2)]' 
+                  : 'border-slate-100 dark:border-white/5 bg-white dark:bg-white/5 hover:border-slate-300 dark:hover:border-white/10 hover:translate-y-[-4px]'
               }`}
             >
-              <tier.icon className={`w-8 h-8 ${tier.color}`} />
-              <span className="text-xs font-bold uppercase tracking-wider">{tier.label}</span>
+              <div className={`p-4 rounded-2xl bg-white dark:bg-white/5 shadow-inner transition-transform group-hover:scale-110 ${tier.color}`}>
+                <tier.icon size={32} />
+              </div>
+              <div className="text-center">
+                  <span className={`text-[10px] font-black uppercase tracking-widest ${formData.condition.tier === tier.id ? 'text-brand-500' : 'text-slate-400'}`}>
+                    {tier.label}
+                  </span>
+                  <p className="text-[10px] text-slate-400 dark:text-gray-500 mt-0.5">{tier.desc}</p>
+              </div>
             </button>
           ))}
         </div>
       </div>
 
       {/* Merged Highlights & Appeal */}
-      <div className="space-y-4">
+      <div className="space-y-4 pt-6 border-t border-slate-100 dark:border-white/5">
         <div className="flex justify-between items-center">
-            <label className="text-sm font-bold text-slate-700 dark:text-gray-300">Vehicle Highlights & Appeal</label>
-            <span className="text-[10px] font-bold text-slate-400">CHOOSE AS MANY AS APPLY</span>
+            <label className="text-sm font-bold text-slate-700 dark:text-gray-300">Verified Highlights</label>
+            <span className="text-[10px] font-bold text-slate-400 tracking-widest">TAP TO TOGGLE</span>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {[
-            'Best price in market', 'Clean Carfax / 1 Owner', 'Accident-free history',
-            'Loaded with premium packs', 'Exceptionally low mileage', 'Perfect, like-new condition',
-            'Recent major service', 'Rare find config/color', 'Still under warranty',
-            'CPO eligible / Certified', 'New tires/brakes', 'Full maintenance records'
+            'Clean Carfax', '1 Owner Only', 'Accident Free', 'M-Sport Pack', 
+            'Under Warranty', 'CPO Eligible', 'New Tires', 'Towing Package', 
+            'Low Mileage', 'Panoramic Roof', 'Dealer Serviced', 'Rare Config'
           ].map((h) => (
-            <label key={h} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
-              formData.condition.highlights.includes(h)
-                ? 'bg-brand-50 dark:bg-brand-900/20 border-brand-500 dark:border-brand-500/50 text-brand-700 dark:text-brand-300'
-                : 'bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-gray-400 hover:border-slate-300'
-            }`}>
-              <input 
-                type="checkbox"
-                className="hidden"
-                checked={formData.condition.highlights.includes(h)}
-                onChange={() => {
-                  const current = formData.condition.highlights;
-                  const next = current.includes(h) ? current.filter(x => x !== h) : [...current, h];
-                  updateField('condition', 'highlights', next);
-                }}
-              />
-              <div className={`w-4 h-4 border rounded flex items-center justify-center transition-colors ${
-                formData.condition.highlights.includes(h) ? 'bg-brand-500 border-brand-500' : 'border-slate-300'
-              }`}>
-                {formData.condition.highlights.includes(h) && <Check size={12} className="text-white" />}
-              </div>
-              <span className="text-xs font-medium">{h}</span>
-            </label>
+            <button
+              key={h}
+              onClick={() => {
+                const current = formData.condition.highlights;
+                const next = current.includes(h) ? current.filter(x => x !== h) : [...current, h];
+                updateField('condition', 'highlights', next);
+              }}
+              className={`flex items-center gap-3 p-3 rounded-2xl border-2 text-xs font-bold transition-all ${
+                formData.condition.highlights.includes(h)
+                  ? 'bg-brand-500 text-white border-brand-400 shadow-lg shadow-brand-500/20'
+                  : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-500 dark:text-gray-400 hover:border-slate-300'
+              }`}
+            >
+              {formData.condition.highlights.includes(h) ? <Check size={14} /> : <div className="w-3.5 h-3.5" />}
+              {h}
+            </button>
           ))}
         </div>
-        <input 
-          maxLength={100}
-          className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:border-brand-500 outline-none"
-          placeholder="Other highlights... (max 100 chars)"
-          value={formData.condition.customHighlights}
-          onChange={(e) => updateField('condition', 'customHighlights', e.target.value)}
-        />
       </div>
 
       {/* Standout Features */}
-      <div className="space-y-6 pt-4 border-t border-slate-100 dark:border-white/5">
+      <div className="space-y-8 pt-6 border-t border-slate-100 dark:border-white/5">
         <div className="space-y-3">
-            <label className="text-sm font-bold text-slate-700 dark:text-gray-300 block italic">"The exterior stands out because..."</label>
+            <div className="flex items-center justify-between">
+                <label className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">Exterior Selling Angle</label>
+                <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-brand-500/10 text-[10px] font-bold text-brand-500 uppercase tracking-tighter">
+                   <Sparkles size={10} /> AI Enhanced
+                </div>
+            </div>
             <textarea 
-                className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-4 h-24 text-sm focus:border-brand-500 outline-none"
-                placeholder="e.g., pristine condition with no scratches, rare blue metallic paint..."
+                className="w-full bg-white dark:bg-[#020617] border-2 border-slate-100 dark:border-white/10 rounded-[24px] p-5 h-28 text-sm focus:border-brand-500 outline-none transition-all shadow-inner"
+                placeholder="What makes the paint, wheels, or body stand out?"
                 value={formData.condition.standoutExterior}
                 onChange={(e) => updateField('condition', 'standoutExterior', e.target.value)}
             />
             <div className="flex flex-wrap gap-2">
-                {["Pristine, no scratches", "Rare paint color", "Upgraded wheels", "Garage kept"].map(chip => (
+                {["Pristine metallic paint", "No curb rash on alloys", "Aggressive stance", "Garage kept condition"].map(chip => (
                     <ExampleChip key={chip} text={chip} onClick={(t) => updateField('condition', 'standoutExterior', t)} />
                 ))}
             </div>
         </div>
 
         <div className="space-y-3">
-            <label className="text-sm font-bold text-slate-700 dark:text-gray-300 block italic">"The interior impresses with..."</label>
+            <div className="flex items-center justify-between">
+                <label className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">Interior Vibe</label>
+                <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-brand-500/10 text-[10px] font-bold text-brand-500 uppercase tracking-tighter">
+                   <Sparkles size={10} /> AI Enhanced
+                </div>
+            </div>
             <textarea 
-                className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-4 h-24 text-sm focus:border-brand-500 outline-none"
-                placeholder="e.g., spotless leather seats that look unused, premium materials..."
+                className="w-full bg-white dark:bg-[#020617] border-2 border-slate-100 dark:border-white/10 rounded-[24px] p-5 h-28 text-sm focus:border-brand-500 outline-none transition-all shadow-inner"
+                placeholder="Describe the smell, leather condition, or technology feel."
                 value={formData.condition.standoutInterior}
                 onChange={(e) => updateField('condition', 'standoutInterior', e.target.value)}
             />
             <div className="flex flex-wrap gap-2">
-                {["Spotless leather", "No wear, like new", "Upgraded sound system", "New car smell"].map(chip => (
+                {["Smells brand new", "Merino leather is perfect", "Tech package is massive", "Ambient lighting pop"].map(chip => (
                     <ExampleChip key={chip} text={chip} onClick={(t) => updateField('condition', 'standoutInterior', t)} />
                 ))}
             </div>
@@ -608,7 +687,7 @@ const ListingGenerator: React.FC = () => {
             <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-700 dark:text-gray-300">Dealership Name</label>
                 <input 
-                    className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-brand-500 outline-none"
+                    className="w-full bg-white dark:bg-[#020617] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-brand-500 outline-none transition-all"
                     placeholder="e.g., Smith Family Motors"
                     value={formData.dealership.name}
                     onChange={(e) => updateField('dealership', 'name', e.target.value)}
@@ -617,7 +696,7 @@ const ListingGenerator: React.FC = () => {
             <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-700 dark:text-gray-300">City / Location</label>
                 <input 
-                    className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-brand-500 outline-none"
+                    className="w-full bg-white dark:bg-[#020617] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-brand-500 outline-none transition-all"
                     placeholder="e.g., Austin"
                     value={formData.dealership.city}
                     onChange={(e) => updateField('dealership', 'city', e.target.value)}
@@ -625,10 +704,12 @@ const ListingGenerator: React.FC = () => {
             </div>
         </div>
         <div className="pb-3 pl-4">
-            <label className="flex items-center gap-2 cursor-pointer group">
-                <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500" />
-                <span className="text-xs text-slate-500 dark:text-gray-400 font-medium group-hover:text-brand-500 transition-colors">Same as last time ↻</span>
-            </label>
+            <button 
+                type="button"
+                className="flex items-center gap-2 group text-xs font-bold text-slate-400 hover:text-brand-500 transition-colors uppercase tracking-widest"
+            >
+                Same as last time ↻
+            </button>
         </div>
       </div>
 
@@ -636,7 +717,7 @@ const ListingGenerator: React.FC = () => {
         <div className="space-y-3">
             <label className="text-sm font-bold text-slate-700 dark:text-gray-300 block">"We're known for..."</label>
             <input 
-                className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:border-brand-500 outline-none"
+                className="w-full bg-white dark:bg-[#020617] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:border-brand-500 outline-none"
                 placeholder="e.g., no-pressure sales and transparent pricing"
                 value={formData.dealership.knownFor}
                 onChange={(e) => updateField('dealership', 'knownFor', e.target.value)}
@@ -651,7 +732,7 @@ const ListingGenerator: React.FC = () => {
         <div className="space-y-3">
             <label className="text-sm font-bold text-slate-700 dark:text-gray-300 block">"What sets us apart is..."</label>
             <input 
-                className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:border-brand-500 outline-none"
+                className="w-full bg-white dark:bg-[#020617] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:border-brand-500 outline-none"
                 placeholder="e.g., our lifetime powertrain warranty on all used vehicles"
                 value={formData.dealership.setsApart}
                 onChange={(e) => updateField('dealership', 'setsApart', e.target.value)}
@@ -665,37 +746,40 @@ const ListingGenerator: React.FC = () => {
       </div>
 
       {/* Tone Sliders */}
-      <div className="space-y-8 bg-slate-50 dark:bg-white/5 p-6 rounded-3xl border border-slate-200 dark:border-white/10">
-         <h4 className="text-xs font-black uppercase tracking-widest text-brand-600 dark:text-brand-400">Listing Tone Calibrators</h4>
+      <div className="space-y-8 bg-slate-50 dark:bg-white/5 p-8 rounded-[32px] border border-slate-200 dark:border-white/10 shadow-inner">
+         <div className="flex items-center gap-2 mb-2">
+            <PenTool size={16} className="text-brand-500" />
+            <h4 className="text-xs font-black uppercase tracking-widest text-brand-600 dark:text-brand-400">Listing Tone Strategy</h4>
+         </div>
          
          {[
-            { id: 'storytelling', label: 'Storytelling', left: 'Facts Only', right: 'Narrative', tip: 'Left = facts only, Right = narrative-driven' },
-            { id: 'formality', label: 'Formality', left: 'Professional', right: 'Conversational', tip: 'Left = professional, Right = casual friendly' },
-            { id: 'benefitFocus', label: 'Benefit Focus', left: 'Features', right: 'Benefits', tip: 'Left = list features, Right = emphasize what buyer gets' },
+            { id: 'storytelling', label: 'Sales Narrative', left: 'Facts Only', right: 'Storyteller', tip: 'Left = facts only, Right = narrative-driven' },
+            { id: 'formality', label: 'Brand Voice', left: 'Formal', right: 'Conversational', tip: 'Left = professional, Right = casual friendly' },
+            { id: 'benefitFocus', label: 'Value Emphasis', left: 'Specs', right: 'Benefits', tip: 'Left = list features, Right = emphasize what buyer gets' },
          ].map(slider => (
-            <div key={slider.id} className="space-y-2">
-                <div className="flex justify-between items-center text-xs font-bold text-slate-600 dark:text-gray-400">
-                    <span className="flex items-center gap-1">
+            <div key={slider.id} className="space-y-3">
+                <div className="flex justify-between items-center text-xs font-black text-slate-700 dark:text-gray-300">
+                    <span className="flex items-center gap-1 uppercase tracking-wider">
                         {slider.label} 
-                        <div className="group relative">
-                            <Info size={12} className="cursor-help" />
-                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-slate-900 text-white p-2 rounded text-[10px] leading-tight opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                        <div className="group relative ml-1">
+                            <Info size={12} className="cursor-help text-slate-400" />
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-slate-900 text-white p-3 rounded-xl text-[10px] leading-tight opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-2xl">
                                 {slider.tip}
                             </div>
                         </div>
                     </span>
-                    <span>{(formData.dealership.toneSliders as any)[slider.id]}%</span>
+                    <span className="text-brand-500">{(formData.dealership.toneSliders as any)[slider.id]}%</span>
                 </div>
                 <input 
                     type="range"
-                    className="w-full h-2 bg-slate-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-brand-500"
+                    className="w-full h-1.5 bg-slate-200 dark:bg-gray-800 rounded-lg appearance-none cursor-pointer accent-brand-500"
                     value={(formData.dealership.toneSliders as any)[slider.id]}
                     onChange={(e) => {
                         const sliders = { ...formData.dealership.toneSliders, [slider.id]: parseInt(e.target.value) };
                         updateField('dealership', 'toneSliders', sliders);
                     }}
                 />
-                <div className="flex justify-between text-[10px] font-mono text-slate-400 uppercase tracking-tighter">
+                <div className="flex justify-between text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">
                     <span>{slider.left}</span>
                     <span>{slider.right}</span>
                 </div>
@@ -740,7 +824,7 @@ const ListingGenerator: React.FC = () => {
                             }}
                             className={`p-3 rounded-xl border text-xs font-medium text-left transition-all ${
                                 formData.actionDrivers.urgencyTriggers.includes(u)
-                                    ? 'bg-red-50 dark:bg-red-900/20 border-red-500 dark:border-red-500/50 text-red-700 dark:text-red-400'
+                                    ? 'bg-red-50 dark:bg-red-900/20 border-red-500 dark:border-red-500/50 text-red-700 dark:text-red-400 shadow-md'
                                     : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-gray-400 disabled:opacity-30'
                             }`}
                         >
@@ -753,8 +837,8 @@ const ListingGenerator: React.FC = () => {
             {/* Features Categories */}
             <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-white/5">
                 <div className="flex justify-between items-center">
-                    <label className="text-sm font-bold text-slate-700 dark:text-gray-300">✨ Premium Features</label>
-                    <span className="text-[10px] font-bold text-brand-500">BOOSTS DESIRE & ROI</span>
+                    <label className="text-sm font-bold text-slate-700 dark:text-gray-300 uppercase tracking-widest">Premium Equipment Matrix</label>
+                    <span className="text-[10px] font-black text-brand-500">OPTIMIZES SEARCH ALGORITHMS</span>
                 </div>
                 
                 <div className="space-y-3">
@@ -763,10 +847,10 @@ const ListingGenerator: React.FC = () => {
                         const selectedCount = (formData.actionDrivers.premiumFeatures as any)[cat.id].length;
                         
                         return (
-                            <div key={cat.id} className="border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden bg-white dark:bg-white/5 transition-all">
+                            <div key={cat.id} className="border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden bg-white dark:bg-[#020617] transition-all">
                                 <button 
                                     onClick={() => setExpandedCategories(prev => isExpanded ? prev.filter(x => x !== cat.id) : [...prev, cat.id])}
-                                    className="w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
+                                    className="w-full flex items-center justify-between p-5 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
                                 >
                                     <div className="flex items-center gap-3">
                                         <cat.icon className="w-5 h-5 text-brand-500" />
@@ -775,11 +859,11 @@ const ListingGenerator: React.FC = () => {
                                             {selectedCount}/{cat.features.length}
                                         </span>
                                     </div>
-                                    {isExpanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                                    {isExpanded ? <Minimize2 size={16} className="text-slate-400" /> : <Maximize2 size={16} className="text-slate-400" />}
                                 </button>
                                 
                                 {isExpanded && (
-                                    <div className="p-4 pt-0 border-t border-slate-100 dark:border-white/5 animate-in fade-in slide-in-from-top-2">
+                                    <div className="p-5 pt-0 border-t border-slate-100 dark:border-white/5 animate-in fade-in slide-in-from-top-2">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-4">
                                             <label className="col-span-full flex items-center gap-2 pb-2 mb-2 border-b border-slate-100 dark:border-white/5">
                                                 <input 
@@ -791,7 +875,7 @@ const ListingGenerator: React.FC = () => {
                                                         updateField('actionDrivers', 'premiumFeatures', features);
                                                     }}
                                                 />
-                                                <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Select All {cat.label}</span>
+                                                <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Select All</span>
                                             </label>
                                             {cat.features.map(f => (
                                                 <label key={f} className="flex items-center gap-3 cursor-pointer group">
@@ -813,13 +897,13 @@ const ListingGenerator: React.FC = () => {
 
                                         {/* CUSTOM FEATURE INPUT FOR SUBSECTION */}
                                         <div className="mt-6 space-y-2 border-t border-slate-100 dark:border-white/5 pt-4">
-                                            <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase">
-                                                <PlusCircle size={12} />
-                                                Add other {cat.label.toLowerCase()}
+                                            <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                                <PlusCircle size={10} />
+                                                Specific Model Features
                                             </div>
                                             <input 
-                                                className="w-full bg-slate-50 dark:bg-[#020617] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2 text-xs focus:border-brand-500 outline-none transition-all"
-                                                placeholder={`e.g., custom interior trim, specific tech add-ons...`}
+                                                className="w-full bg-slate-50 dark:bg-[#020617] border-2 border-slate-100 dark:border-white/10 rounded-xl px-4 py-2.5 text-xs focus:border-brand-500 outline-none transition-all shadow-inner"
+                                                placeholder={`e.g., specific driver assistance, interior carbon trim...`}
                                                 value={(formData.actionDrivers.customSubFeatures as any)[cat.id]}
                                                 onChange={(e) => {
                                                     const custom = { ...formData.actionDrivers.customSubFeatures, [cat.id]: e.target.value };
@@ -838,10 +922,10 @@ const ListingGenerator: React.FC = () => {
             {/* Additional Narrative fields */}
             <div className="space-y-6 pt-4 border-t border-slate-100 dark:border-white/5">
                 <div className="space-y-3">
-                    <label className="text-sm font-bold text-slate-700 dark:text-gray-300 block">💎 "The feature buyers get most excited about is..."</label>
+                    <label className="text-sm font-bold text-slate-700 dark:text-gray-300 block">💎 The #1 Feature Buyers Fall for:</label>
                     <input 
-                        className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:border-brand-500 outline-none"
-                        placeholder="e.g., the panoramic sunroof that opens up the entire cabin"
+                        className="w-full bg-white dark:bg-[#020617] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:border-brand-500 outline-none shadow-inner"
+                        placeholder="e.g., the panoramic sky lounge roof"
                         value={formData.actionDrivers.wowFactor}
                         onChange={(e) => updateField('actionDrivers', 'wowFactor', e.target.value)}
                     />
@@ -855,22 +939,22 @@ const ListingGenerator: React.FC = () => {
                 <div className="space-y-3">
                     <div className="flex justify-between items-center">
                         <label className={`text-sm font-bold block ${formData.actionDrivers.noSpecialOffer ? 'text-slate-400' : 'text-slate-700 dark:text-gray-300'}`}>
-                            🎁 Special Offers / Incentives
+                            🎁 Special Dealer Incentives
                         </label>
                         <label className="flex items-center gap-2 cursor-pointer">
                             <input 
                                 type="checkbox" 
-                                className="w-4 h-4 rounded"
+                                className="w-4 h-4 rounded border-slate-300 text-brand-500"
                                 checked={formData.actionDrivers.noSpecialOffer}
                                 onChange={(e) => updateField('actionDrivers', 'noSpecialOffer', e.target.checked)}
                             />
-                            <span className="text-xs text-slate-500">None</span>
+                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">None</span>
                         </label>
                     </div>
                     {!formData.actionDrivers.noSpecialOffer && (
                         <div className="animate-in fade-in slide-in-from-top-1">
                             <input 
-                                className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:border-brand-500 outline-none"
+                                className="w-full bg-white dark:bg-[#020617] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:border-brand-500 outline-none shadow-inner"
                                 placeholder="e.g., our lifetime powertrain warranty at no extra cost"
                                 value={formData.actionDrivers.specialOffer}
                                 onChange={(e) => updateField('actionDrivers', 'specialOffer', e.target.value)}
@@ -888,33 +972,33 @@ const ListingGenerator: React.FC = () => {
       <div className="max-w-7xl mx-auto">
         
         {/* HEADER: GAMIFIED STATUS */}
-        <div className="bg-white dark:bg-[#0f172a] rounded-3xl border border-slate-200 dark:border-white/10 p-6 mb-8 shadow-xl relative overflow-hidden">
+        <div className="bg-white dark:bg-[#0f172a] rounded-[40px] border border-slate-200 dark:border-white/10 p-6 mb-8 shadow-2xl relative overflow-hidden">
             {/* Background Glow */}
             <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-brand-500/5 blur-[80px] rounded-full pointer-events-none" />
             
             <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8">
                 {/* Score & Progress */}
                 <div className="flex-1 w-full space-y-6">
-                    <div className="flex flex-col sm:flex-row items-center gap-6">
-                         <div className="flex items-center gap-4 group">
-                             <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-700 ${
+                    <div className="flex flex-col sm:flex-row items-center gap-8">
+                         <div className="flex items-center gap-5 group">
+                             <div className={`w-20 h-20 rounded-3xl flex items-center justify-center shadow-2xl transition-all duration-1000 ${
                                 qualityScore < 50 ? 'bg-red-500/10 text-red-500' : 
                                 qualityScore < 75 ? 'bg-yellow-500/10 text-yellow-500' : 'bg-green-500/10 text-green-500'
                              }`}>
-                                 <Trophy className={`w-10 h-10 transition-transform duration-700 group-hover:scale-110 ${qualityScore >= 75 ? 'fill-current' : ''}`} />
+                                 <Trophy className={`w-12 h-12 transition-all duration-1000 group-hover:scale-110 group-hover:rotate-12 ${qualityScore >= 75 ? 'fill-current drop-shadow-[0_0_15px_rgba(34,197,94,0.5)]' : ''}`} />
                              </div>
                              <div>
-                                <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-1">Listing Quality</div>
+                                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1">Listing Conversion Quality</div>
                                 <div className="flex items-baseline gap-1">
-                                    <span className="text-4xl font-black tabular-nums">{qualityScore}</span>
-                                    <span className="text-xl font-bold text-slate-500">%</span>
+                                    <span className="text-5xl font-black tabular-nums tracking-tighter">{qualityScore}</span>
+                                    <span className="text-2xl font-black text-slate-400 opacity-50">%</span>
                                 </div>
                              </div>
                          </div>
 
-                         <div className="flex-1 w-full sm:w-auto h-2 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden relative shadow-inner">
+                         <div className="flex-1 w-full sm:w-auto h-3 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden relative shadow-inner border border-slate-200 dark:border-white/10">
                             <div 
-                                className={`h-full transition-all duration-1000 ease-out rounded-full ${
+                                className={`h-full transition-all duration-1000 ease-out rounded-full shadow-[0_0_15px_rgba(14,165,233,0.3)] ${
                                     completion < 100 ? 'bg-brand-500' : 'bg-green-500'
                                 }`}
                                 style={{ width: `${completion}%` }}
@@ -925,51 +1009,54 @@ const ListingGenerator: React.FC = () => {
                          </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-100 dark:border-white/5">
                         <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-2">
-                                <span className="w-8 h-8 rounded-full bg-brand-500 text-white flex items-center justify-center text-sm font-bold">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-2xl bg-brand-500 text-white flex items-center justify-center text-lg font-black shadow-lg shadow-brand-500/20">
                                     {currentStep}
-                                </span>
-                                <span className="text-lg font-bold">
-                                    Step {currentStep} of 5: 
-                                    <span className="ml-2 text-slate-500 dark:text-gray-400 font-medium">
-                                        {currentStep === 1 ? 'Vehicle Essentials' : 
-                                         currentStep === 2 ? 'Vehicle Media' :
-                                         currentStep === 3 ? 'Condition & Highlights' :
-                                         currentStep === 4 ? 'Dealership Voice' : 'Action Drivers'}
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-black uppercase tracking-[0.1em] text-slate-400">Current Phase</span>
+                                    <span className="text-lg font-black tracking-tight">
+                                        {currentStep === 1 ? 'Vehicle Intelligence' : 
+                                         currentStep === 2 ? 'Visual Assets' :
+                                         currentStep === 3 ? 'Condition & Vibe' :
+                                         currentStep === 4 ? 'Dealership DNA' : 'Action Drivers'}
                                     </span>
-                                </span>
+                                </div>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
                             <button 
                                 onClick={handleSaveDraft}
                                 disabled={isSaving || isGenerating}
-                                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-white/5 text-sm font-bold text-slate-600 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors flex items-center gap-2 border border-slate-200 dark:border-white/10"
+                                className="px-5 py-2.5 rounded-2xl bg-white dark:bg-white/5 text-sm font-black uppercase tracking-widest text-slate-600 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-white/10 transition-all flex items-center gap-2 border-2 border-slate-100 dark:border-white/10 shadow-sm"
                             >
                                 {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                                 Save Draft
                             </button>
-                            <span className="text-xs font-medium text-slate-400">Progress: {completion}% Complete</span>
+                            <div className="flex flex-col text-right">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Progress</span>
+                                <span className="text-xs font-black text-brand-500">{completion}% VALIDATED</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
             
             {/* SIDEBAR NAVIGATION */}
-            <div className="hidden lg:block lg:col-span-3 space-y-3 sticky top-24">
+            <div className="hidden lg:block lg:col-span-3 space-y-4 sticky top-24">
                 {[
-                    { step: 1, label: 'Essentials', icon: Database },
-                    { step: 2, label: 'Vehicle Media', icon: ImageIcon },
-                    { step: 3, label: 'Condition', icon: Activity },
-                    { step: 4, label: 'Dealership', icon: MapPin },
-                    { step: 5, label: 'Action Drivers', icon: Zap },
+                    { step: 1, label: 'Intelligence', icon: Brain },
+                    { step: 2, label: 'Visuals', icon: Camera },
+                    { step: 3, label: 'Vibe Check', icon: Activity },
+                    { step: 4, label: 'Dealer DNA', icon: ShieldCheck },
+                    { step: 5, label: 'Conversion', icon: Zap },
                 ].map((item) => {
-                    const isComplete = (item.step === 1 && Object.values(formData.vehicle).every(v => v !== '')) ||
+                    const isComplete = (item.step === 1 && formData.vehicle.year !== '' && formData.vehicle.make !== '') ||
                                        (item.step === 2 && formData.media.images.length > 0) ||
                                        (item.step === 3 && formData.condition.tier !== '') ||
                                        (item.step === 4 && formData.dealership.name !== '') ||
@@ -982,52 +1069,79 @@ const ListingGenerator: React.FC = () => {
                             key={item.step}
                             onClick={() => !isGenerating && setCurrentStep(item.step)}
                             disabled={isGenerating}
-                            className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all ${
+                            className={`w-full flex items-center justify-between p-5 rounded-[24px] border-2 transition-all duration-300 group ${
                                 isActive 
-                                    ? 'bg-brand-600 border-brand-500 text-white shadow-lg shadow-brand-500/30 -translate-x-2' 
-                                    : 'bg-white dark:bg-[#0f172a] border-slate-200 dark:border-white/10 text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-white/5'
+                                    ? 'bg-brand-600 border-brand-500 text-white shadow-[0_15px_30px_rgba(14,165,233,0.3)] scale-[1.02] -translate-x-3' 
+                                    : 'bg-white dark:bg-[#0f172a] border-slate-100 dark:border-white/5 text-slate-500 dark:text-gray-400 hover:border-slate-300 dark:hover:border-white/10 hover:translate-x-[-4px]'
                             }`}
                         >
-                            <div className="flex items-center gap-3">
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isActive ? 'bg-white/20' : 'bg-slate-100 dark:bg-white/5'}`}>
-                                    <item.icon size={16} />
+                            <div className="flex items-center gap-4">
+                                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${isActive ? 'bg-white/20 scale-110' : 'bg-slate-100 dark:bg-white/5 group-hover:scale-110'}`}>
+                                    <item.icon size={18} />
                                 </div>
-                                <span className="text-sm font-bold">{item.label}</span>
+                                <span className={`text-sm font-black uppercase tracking-widest ${isActive ? 'text-white' : 'text-slate-600 dark:text-gray-400'}`}>{item.label}</span>
                             </div>
                             {isComplete ? (
-                                <CheckCircle2 className={`${isActive ? 'text-white' : 'text-green-500'} animate-bounce-in`} size={18} />
+                                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${isActive ? 'bg-white/20' : 'bg-green-500/10'}`}>
+                                   <Check size={14} className={isActive ? 'text-white' : 'text-green-500'} />
+                                </div>
                             ) : (
-                                <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-white/40' : 'bg-slate-300 dark:bg-white/10'}`} />
+                                <div className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-white/40' : 'bg-slate-200 dark:bg-white/10'}`} />
                             )}
                         </button>
                     );
                 })}
+                
+                {/* Visual IQ Badge in Sidebar */}
+                <div className="p-6 rounded-[32px] bg-gradient-to-br from-indigo-900 to-slate-900 text-white border border-white/10 shadow-2xl overflow-hidden relative group">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-brand-500/10 rounded-full blur-2xl group-hover:bg-brand-500/20 transition-colors"></div>
+                    <div className="relative z-10">
+                        <div className="flex items-center gap-2 mb-3">
+                            <ShieldCheck size={14} className="text-brand-500" />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Visual Compliance</span>
+                        </div>
+                        <div className="text-2xl font-black mb-1 tracking-tighter">98/100</div>
+                        <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+                           <div className="w-[98%] h-full bg-brand-500"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {/* MAIN FORM AREA */}
-            <div className="col-span-1 lg:col-span-9 bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-white/10 rounded-[32px] p-8 md:p-12 shadow-2xl relative min-h-[600px]">
+            <div className="col-span-1 lg:col-span-9 bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-white/10 rounded-[48px] p-8 md:p-14 shadow-2xl relative min-h-[700px]">
                 
                 {/* Generation Loader */}
                 {isGenerating && (
-                  <div className="absolute inset-0 z-50 bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-md rounded-[32px] flex flex-col items-center justify-center p-12 text-center">
-                    <div className="w-24 h-24 mb-8 relative">
-                       <div className="absolute inset-0 bg-brand-500/20 rounded-full blur-2xl animate-pulse"></div>
-                       <Loader2 className="w-full h-full text-brand-500 animate-spin relative z-10" />
+                  <div className="absolute inset-0 z-50 bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-xl rounded-[48px] flex flex-col items-center justify-center p-12 text-center animate-in fade-in duration-500">
+                    <div className="w-32 h-32 mb-10 relative">
+                       <div className="absolute inset-0 bg-brand-500/20 rounded-full blur-3xl animate-pulse"></div>
+                       <Loader2 className="w-full h-full text-brand-500 animate-spin relative z-10" strokeWidth={1} />
+                       <div className="absolute inset-0 flex items-center justify-center">
+                          <Sparkles className="w-10 h-10 text-brand-500 animate-pulse" />
+                       </div>
                     </div>
-                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Generating Your AI Listing...</h2>
-                    <p className="text-slate-600 dark:text-gray-400 max-w-md mb-8">
-                       Our engines are optimizing your vehicle media and crafting the perfect sales narrative. 
-                       This usually takes 15-30 seconds.
+                    <h2 className="text-4xl font-black text-slate-900 dark:text-white mb-6 tracking-tighter">Generating Conversion Assets...</h2>
+                    <p className="text-slate-500 dark:text-gray-400 max-w-md mb-10 text-lg leading-relaxed">
+                       Our neural engines are processing vehicle metadata and crafting psychological sales hooks for you.
                     </p>
-                    <div className="w-full max-w-sm h-3 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden relative border border-slate-200 dark:border-white/10 shadow-inner">
+                    <div className="w-full max-w-md h-4 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden relative border border-slate-200 dark:border-white/10 shadow-inner">
                         <div 
-                          className="h-full bg-brand-500 transition-all duration-500 shadow-[0_0_15px_rgba(14,165,233,0.5)]" 
+                          className="h-full bg-brand-500 transition-all duration-500 shadow-[0_0_20px_rgba(14,165,233,0.6)]" 
                           style={{ width: `${uploadProgress}%` }}
                         />
                     </div>
-                    <span className="text-xs font-black uppercase tracking-widest text-slate-400 mt-3">
-                       Media Optimization: {uploadProgress}%
-                    </span>
+                    <div className="flex items-center gap-6 mt-6">
+                        <div className="flex flex-col items-center">
+                            <span className="text-2xl font-black text-slate-900 dark:text-white">{uploadProgress}%</span>
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Media Sync</span>
+                        </div>
+                        <div className="w-px h-8 bg-slate-200 dark:bg-white/10" />
+                        <div className="flex flex-col items-center">
+                            <span className="text-2xl font-black text-slate-900 dark:text-white">{uploadProgress > 80 ? '100%' : 'WAITING'}</span>
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Copywriting</span>
+                        </div>
+                    </div>
                   </div>
                 )}
 
@@ -1039,41 +1153,46 @@ const ListingGenerator: React.FC = () => {
                 {currentStep === 5 && renderActionDrivers()}
 
                 {/* Footer Navigation */}
-                <div className="mt-12 pt-12 border-t border-slate-100 dark:border-white/5 flex flex-col sm:flex-row items-center justify-between gap-6">
+                <div className="mt-16 pt-12 border-t border-slate-100 dark:border-white/5 flex flex-col sm:flex-row items-center justify-between gap-8">
                     <button
                         onClick={prevStep}
                         disabled={currentStep === 1 || isGenerating}
-                        className={`flex items-center gap-2 px-8 py-4 rounded-2xl font-bold text-lg transition-all ${
+                        className={`flex items-center gap-3 px-10 py-5 rounded-[24px] font-black text-base uppercase tracking-widest transition-all ${
                             currentStep === 1 || isGenerating
                                 ? 'opacity-0 pointer-events-none' 
-                                : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-white/10'
+                                : 'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-gray-400 hover:bg-slate-200 dark:hover:bg-white/10 shadow-sm'
                         }`}
                     >
                         <ChevronLeft className="w-6 h-6" /> Back
                     </button>
 
-                    <div className="flex-1 flex flex-col items-center gap-2">
-                        <span className="text-xs font-black uppercase tracking-widest text-slate-400">Step Progress</span>
-                        <div className="w-32 h-1 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
-                            <div className="h-full bg-brand-500 transition-all duration-500" style={{ width: `${currentStep * 20}%` }} />
+                    <div className="flex-1 flex flex-col items-center gap-3">
+                        <div className="flex gap-1.5">
+                            {[1,2,3,4,5].map(dot => (
+                                <div 
+                                    key={dot}
+                                    className={`w-12 h-1.5 rounded-full transition-all duration-700 ${dot <= currentStep ? 'bg-brand-500 shadow-[0_0_10px_rgba(14,165,233,0.5)]' : 'bg-slate-200 dark:bg-white/5'}`}
+                                />
+                            ))}
                         </div>
+                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Campaign Blueprint</span>
                     </div>
 
                     {currentStep < 5 ? (
                         <button
                             onClick={nextStep}
                             disabled={isGenerating}
-                            className="btn-primary btn-glow group flex items-center gap-2 px-12 py-4 rounded-2xl font-bold text-lg shadow-xl hover:scale-105 disabled:opacity-70"
+                            className="btn-primary btn-glow group flex items-center gap-3 px-14 py-5 rounded-[24px] font-black text-base uppercase tracking-[0.1em] shadow-2xl hover:scale-105 active:scale-95 disabled:opacity-70 transition-all"
                         >
-                            Next Section <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                            Next Phase <ChevronRight className="w-6 h-6 group-hover:translate-x-2 transition-transform duration-500" />
                         </button>
                     ) : (
                         <button
                             onClick={handleGenerate}
                             disabled={isGenerating}
-                            className="btn-primary btn-glow group flex items-center gap-3 px-12 py-4 rounded-2xl font-bold text-xl shadow-2xl hover:scale-105 bg-gradient-to-r from-orange-500 to-yellow-500 disabled:opacity-70"
+                            className="btn-primary btn-glow group flex items-center gap-4 px-16 py-6 rounded-[28px] font-black text-xl uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 bg-gradient-to-r from-orange-500 via-yellow-500 to-orange-500 bg-[length:200%_auto] animate-gradient-x disabled:opacity-70 transition-all"
                         >
-                            Generate Listing <Sparkles className="w-6 h-6 animate-pulse" />
+                            Generate Campaign <Sparkles className="w-7 h-7 animate-pulse" />
                         </button>
                     )}
                 </div>

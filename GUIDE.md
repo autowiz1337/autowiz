@@ -1,7 +1,7 @@
 # Velocity AI - Administrator Guide
 
 ## Overview
-Velocity AI is a comprehensive automotive listing optimization platform designed to automate and enhance vehicle merchandising.
+Velocity AI is a comprehensive automotive listing optimization platform designed to automate and enhance vehicle merchandising using neural copywriting and visual processing.
 
 ---
 
@@ -15,56 +15,70 @@ Accessed via the "Log in" button or automatically via a magic link (e.g., `/dash
 
 ### Key Functions
 *   **Listing Health**: A gamified widget showing a score (0-100) based on asset quality.
-*   **Narrative Editor**: Distraction-free text area to edit AI-generated descriptions. Supports local draft saving.
+*   **Narrative Editor**: Distraction-free text area to edit AI-generated descriptions. Supports local draft saving to `localStorage`.
+*   **Market Alert Ticker**: Real-time ticker integrated with external valuation data (simulated) to provide dealers with competitive context.
 
 ---
 
 ## 3. Listing Generator (`/create`)
 The campaign creation core. This multi-step form allows dealers to input vehicle data to feed the AI neural engine.
 
-### Data Flow
-1.  **Vehicle Essentials**: Basic VIN-level data (Year, Make, Model).
-2.  **Vehicle Media**: Users upload up to 40 photos via drag-and-drop.
-3.  **Condition & Highlights**: Qualitative data and "Condition Tiers".
-4.  **Dealership Voice**: Branding and tone sliders.
-5.  **Action Drivers**: Urgency triggers and premium feature categorization.
+### A. The Magic Start (VIN/URL Decoding)
+The form begins with a "Magic Start" input.
+*   **Functionality**: Users can paste a **VIN** or an **Inventory URL** (e.g., Autovit.ro).
+*   **Service**: Driven by `src/services/vinService.ts`.
+*   **Behavior**: The service scans the identifier and auto-populates technical specifications (Year, Make, Model, Trim, Colors, and sometimes Price/Mileage) to reduce manual entry friction by ~80%.
 
-### Media Handling & Hosted Assets (ImgBB Integration)
-Vehicle images are temporarily hosted using the ImgBB API to allow the backend automation (n8n/Python) to access them via public URLs.
+### B. Data Flow & Steps
+1.  **Vehicle Intelligence**: Magic Scan + Verification of technical data.
+2.  **Visual Assets**: High-volume image upload (Up to 40 photos).
+3.  **Condition & Vibe**: Qualitative assessment using visual "Condition Tiers".
+4.  **Dealership DNA**: Branding profiles and psychological tone sliders.
+5.  **Conversion Drivers**: Selection of premium equipment and urgency triggers.
 
-#### 1. API Configuration
-The ImgBB integration is located in `src/components/ListingGenerator.tsx` within the `uploadAllImages` function.
-*   **API Key**: Change the `IMGBB_API_KEY` constant inside the `uploadAllImages` function.
-*   **Storage Duration**: Images are set to auto-delete after **12 hours** (`expiration=43200`) to ensure data privacy for the dealership.
+### C. Quality Score Gamification
+The form features a real-time Quality Score (0-100%) to encourage high-quality data submission:
+*   **40% Base**: Completion of core technical specs and condition tier.
+*   **15% Standout**: Completion of Exterior/Interior selling angle narratives.
+*   **15% Premium**: Selection of at least 5 premium equipment items.
+*   **10% Wow Factor**: Completion of the primary "buyer hook" field.
+*   **10% Urgency**: Selection of at least one urgency trigger.
+*   **10% Incentives**: Inclusion of a special dealer offer or explicit "None" selection.
+*   **Bonus 5%**: Uploading 10 or more vehicle images.
 
-#### 2. Sequential Upload Engine
-To prevent browser hang and handle large batches (up to 40 high-res files), the app uses an asynchronous sequential loop:
-- It uploads images one-by-one.
-- It tracks real-time progress which is displayed to the user via a `Loader2` overlay.
-- If an upload fails, it logs the error but continues the queue to ensure the maximum number of assets reach the generator.
+### D. Media Handling & Sequential Upload (ImgBB)
+Vehicle images are hosted via the ImgBB API to provide public URLs for backend processing.
 
-#### 3. Final Webhook Payload
-Once all images are hosted, the resulting array of URLs is appended to the `media.imageUrls` field in the final JSON payload sent to `https://app.autowizz.cfd/webhook/new-order`.
+#### 1. Configuration
+Located in `src/components/ListingGenerator.tsx` within the `uploadAllImages` function.
+*   **Storage Duration**: Set to **12 hours** (`expiration=43200`) for privacy.
+
+#### 2. Sequential Engine
+To handle up to 40 high-res files without browser instability:
+*   Uses an asynchronous `for` loop to upload files one-by-one.
+*   Displays a full-screen loading overlay with real-time percentage progress.
+*   Resulting URLs are bundled into the final webhook payload.
 
 ---
 
 ## 4. Checkout Flows
-The application supports three distinct checkout experiences based on user segment.
+The application supports three distinct checkout experiences:
 
 ### A. Free Pilot (`/pilot`)
-Low-friction entry for free trials. Uses external webhook for data capture.
+Low-friction entry. Directly triggers the capture webhook.
 
 ### B. Paid Stripe Flow (`/checkout`)
-Main revenue driver. Integrates Stripe Elements via a Cloudflare Worker proxy (`/api/charge`) to keep Secret Keys hidden.
+Processes a $499 charge via `src/components/PaidCheckout.tsx` using a Cloudflare Worker proxy (`/api/charge`) to maintain PCI compliance and hide secret keys.
 
 ### C. Invite-Only Flow (`/invite`)
-VIP/Beta access for pre-selected users. Skip payment, jump directly to generation.
+Beta access for pre-vetted dealers. Skips payment, triggers generation immediately.
 
 ---
 
 ## 5. Technical Architecture
 ### Routing Strategy
-Powered by `react-router-dom`. Uses `LegacyRedirectHandler` in `App.tsx` to maintain compatibility with old query-string based links (`?page=...`).
+Powered by `react-router-dom`. Includes a `LegacyRedirectHandler` to support legacy `?page=...` URLs.
 
-### Persistence
-The form uses **Session State Persistence**. Auto-save triggers every 5 seconds to prevent data loss within a browsing session. The Dashboard also saves local drafts to `localStorage` to preserve user edits.
+### Webhook Destination
+All finalized listings are sent to: `https://app.autowizz.cfd/webhook/new-order`.
+Payload includes full vehicle data, dealership profile, and the array of hosted ImgBB URLs.
